@@ -8,7 +8,7 @@
 
 #include <cstdlib>
 #include <ostream>
-#include <misc/fvs.h>
+#include "fvs.h"
 
 class SparseVec : public FVS {
 public:

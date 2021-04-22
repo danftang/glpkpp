@@ -3,7 +3,7 @@
 //
 
 #include <iomanip>
-#include "GlpSimplex.h"
+#include "../include/GlpSimplex.h"
 extern "C" {
     #include "spxprob.h"
 };

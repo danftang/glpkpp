@@ -1,10 +1,8 @@
-//#include <iostream>
 #include <iostream>
 #include "glpk.h"
-#include "spxprob.h"
-#include "GlpProblem.h"
-#include "GlpTableau.h"
-#include "GlpSimplex.h"
+//#include "spxprob.h"
+#include "include/GlpProblem.h"
+#include "include/GlpSimplex.h"
 
 
 int main() {

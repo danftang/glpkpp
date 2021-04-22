@@ -6,7 +6,7 @@
 #define GLPKTEST_GLPTABLEAU_H
 
 #include "glpk.h"
-#include "SparseVec.h"
+#include "../include/SparseVec.h"
 
 class GlpTableau {
 public:

@@ -6,7 +6,7 @@
 #define GLPKTEST_GLPPROBLEM_H
 
 
-#include <glpk.h>
+#include "glpk.h"
 #include "SparseVec.h"
 
 class GlpProblem {

@@ -5,8 +5,8 @@
 #include <cstdio>
 #include <iostream>
 #include <iomanip>
-#include "GlpProblem.h"
-#include "SparseVec.h"
+#include "../include/GlpProblem.h"
+#include "../include/SparseVec.h"
 
 
 

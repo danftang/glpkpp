@@ -4,7 +4,7 @@
 
 #include <iomanip>
 #include <iostream>
-#include "SparseVec.h"
+#include "../include/SparseVec.h"
 
 SparseVec::SparseVec(int dim) {
     n = 0;

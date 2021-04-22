@@ -2,7 +2,7 @@
 // Created by daniel on 15/04/2021.
 //
 
-#include "SimplexMCMC.h"
+#include "../include/SimplexMCMC.h"
 #include <algorithm>
 #include <cmath>
 
