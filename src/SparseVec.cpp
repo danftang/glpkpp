@@ -4,79 +4,106 @@
 
 #include <iomanip>
 #include <iostream>
-#include "../include/SparseVec.h"
+#include "../include/glpkpp.h"
 
-SparseVec::SparseVec(int dim) {
-    n = 0;
-    nnz = dim;
-    ind = new int[dim] -1;
-    vec = new double[dim] -1;
-}
-
-SparseVec::~SparseVec() {
-    free(ind+1);
-    free(vec+1);
-}
-
-double &SparseVec::operator[](int i) {
-    for(int k=1; k<=nnz; k++) {
-        if(ind[k] == i+1) return vec[k];
+namespace glpkpp {
+    SparseVec::SparseVec(int dim, int capacity) {
+        n = dim;
+        int cap = capacity==-1?dim:capacity;
+        nnz = 0;
+        indices = (int *)new int[cap] - 1; // one based indexing :-(
+        values = (double *)new double[cap] - 1;
     }
-    ind[++nnz] = i+1;
-    return vec[nnz]; // allows zero values
-}
 
 
-double SparseVec::operator[](int i) const {
-    for(int k=1; k<nnz; k++) {
-        if(ind[k] == i+1) return vec[k];
+    SparseVec::SparseVec(int dimension, const std::map<int, double> &entries): SparseVec(dimension, entries.size()) {
+        for(auto entry: entries) add(entry.first, entry.second);
     }
-    return 0.0;
-}
 
-void SparseVec::add(int i, double v) {
-    if(v != 0.0) {
-        ind[++nnz] = i + 1;
-        vec[nnz] = v;
-    } // doesn't delete if index already exists
-}
 
-void SparseVec::clear() {
-    nnz = 0;
-}
-
-void SparseVec::toDense(double *dense) const {
-    int i;
-    for(i=0; i<n; ++i) { dense[i] = 0.0; }
-    for(i=1; i<=nnz; ++i) {
-        if(ind[i] > n || ind[i] < 1)
-            std::cout << "Out of range index[" << i << "] = " << ind[i] << " -> " << vec[i] << std::endl;
-        dense[ind[i]-1] = vec[i];
+    SparseVec::~SparseVec() {
+        delete [](indices + 1);
+        delete [](values + 1);
     }
-}
 
-void SparseVec::entry(int k, std::pair<int, double> &retEntry) {
-    int k1 = k+1;
-    retEntry.first = ind[k1]-1;
-    retEntry.second = vec[k1];
-}
-
-double SparseVec::dotProd(double *dense) const {
-    double *dense1base = dense-1;
-    double dp = 0.0;
-    int j;
-    for(int i=1; i<=nnz; ++i) {
-        j = ind[i];
-        dp += dense1base[j] * vec[i];
+    int SparseVec::maxNonZeroIndex() {
+        int max = 0;
+        for(int i=1; i<=nnz; ++i) {
+            if(indices[i] > max) max = indices[i];
+        }
+        return max;
     }
-    return dp;
-}
+
+//    double &SparseVec::operator[](int i) {
+//        for (int k = 1; k <= nnz; k++) {
+//            if (ind[k] == i + 1) return vec[k];
+//        }
+//        ind[++nnz] = i + 1;
+//        return vec[nnz]; // allows zero values
+//    }
+//
+//
+//    double SparseVec::operator[](int i) const {
+//        for (int k = 1; k < nnz; k++) {
+//            if (ind[k] == i + 1) return vec[k];
+//        }
+//        return 0.0;
+//    }
+
+    void SparseVec::add(int i, double v) {
+        if (v != 0.0) {
+            indices[++nnz] = i;
+            values[nnz] = v;
+        } // doesn't delete if index already exists
+    }
+
+    void SparseVec::clear() {
+        nnz = 0;
+    }
+
+    // to zero-based dense array
+    void SparseVec::toDense(double *dense) const {
+        int i;
+        for (i = 0; i < n; ++i) { dense[i] = 0.0; }
+        for (i = 1; i <= nnz; ++i) {
+            if (indices[i] > n || indices[i] < 1)
+                std::cout << "Out of range index[" << i << "] = " << indices[i] << " -> " << values[i] << std::endl;
+            dense[indices[i] - 1] = values[i];
+        }
+    }
+
+    void SparseVec::entry(int k, std::pair<int, double> &retEntry) {
+        retEntry.first = indices[k];
+        retEntry.second = values[k];
+    }
+
+    // sets capacity (also invalidates any data)
+    void SparseVec::setCapacity(int size) {
+        nnz = 0;
+        delete [](indices + 1);
+        delete [](values + 1);
+        indices = ((int *)new int[size]) - 1;
+        values = ((double *)new double[size]) - 1;
+    }
 
 
-std::ostream &operator <<(std::ostream &out, const SparseVec &sVector) {
-    int i;
-    double dense[sVector.n];
-    sVector.toDense(dense);
-    for(i=0; i<sVector.n; ++i) out << std::setw(12) << dense[i] << "\t";
-    return out;
-}
+//    double SparseVec::dotProd(double *dense) const {
+//        double *dense1base = dense - 1;
+//        double dp = 0.0;
+//        int j;
+//        for (int i = 1; i <= nnz; ++i) {
+//            j = ind[i];
+//            dp += dense1base[j] * vec[i];
+//        }
+//        return dp;
+//    }
+
+
+    std::ostream &operator<<(std::ostream &out, const SparseVec &sVector) {
+        int i;
+        double dense[sVector.n];
+        sVector.toDense(dense);
+        for (i = 0; i < sVector.n; ++i) out << std::setw(12) << dense[i] << "\t";
+        return out;
+    }
+};

@@ -4,4 +4,4 @@ project(glpkpp)
 add_subdirectory(src)
 
 link_libraries(glpkpp)
-add_executable(glpktest main.cpp)
+add_executable(glpktest main.cpp include/glpkpp.h)

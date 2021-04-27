@@ -5,18 +5,13 @@
 #ifndef GLPKTEST_GLPSIMPLEX_H
 #define GLPKTEST_GLPSIMPLEX_H
 
-#include <ostream>
-#include "glpk.h"
-extern "C" {
-    #include "spxlp.h"
-};
 
 class GlpSimplex: public SPXLP {
 public:
     int *map;       // map of variables in this simplex to those of the original problem
     double *pi;     // reduced objective = c_B*B'*N + c_N = pi*N + c_N
 
-    GlpSimplex(glp_prob *prob);
+    GlpSimplex(const GlpProblem &prob);
     ~GlpSimplex();
 
 

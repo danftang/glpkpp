@@ -10,5 +10,5 @@ file(GLOB GLPK_SOURCES
         glpk/*/*.c)
 
 
-add_library(glpkpp SHARED ${GLPK_SOURCES} GlpProblem.cpp ../include/GlpProblem.h SparseVec.cpp ../include/SparseVec.h GlpTableau.cpp GlpTableau.h GlpSimplex.cpp ../include/GlpSimplex.h SimplexMCMC.cpp ../include/SimplexMCMC.h)
+add_library(glpkpp SHARED ${GLPK_SOURCES}  ../include/glpkpp.h GlpProblem.cpp SparseVec.cpp GlpSimplex.cpp Constraint.cpp LinearExpression.cpp)
 
