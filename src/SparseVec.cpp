@@ -8,11 +8,11 @@
 
 namespace glpkpp {
     SparseVec::SparseVec(int dim, int capacity) {
-        n = dim;
         int cap = capacity==-1?dim:capacity;
-        nnz = 0;
-        indices = (int *)new int[cap] - 1; // one based indexing :-(
-        values = (double *)new double[cap] - 1;
+        indices = new int[cap+1]; // one based indexing :-(
+        values = new double[cap+1];
+        setDimension(dim);
+        sparseSize() = 0;
     }
 
 
@@ -22,13 +22,15 @@ namespace glpkpp {
 
 
     SparseVec::~SparseVec() {
-        delete [](indices + 1);
-        delete [](values + 1);
+        if(indices != NULL) {
+            delete[] indices;
+            delete[] values;
+        }
     }
 
     int SparseVec::maxNonZeroIndex() {
         int max = 0;
-        for(int i=1; i<=nnz; ++i) {
+        for(int i=1; i<=sparseSize(); ++i) {
             if(indices[i] > max) max = indices[i];
         }
         return max;
@@ -52,38 +54,42 @@ namespace glpkpp {
 
     void SparseVec::add(int i, double v) {
         if (v != 0.0) {
-            indices[++nnz] = i;
-            values[nnz] = v;
+            indices[++sparseSize()] = i;
+            values[sparseSize()] = v;
         } // doesn't delete if index already exists
     }
 
     void SparseVec::clear() {
-        nnz = 0;
+        sparseSize() = 0;
     }
 
     // to zero-based dense array
     void SparseVec::toDense(double *dense) const {
         int i;
-        for (i = 0; i < n; ++i) { dense[i] = 0.0; }
-        for (i = 1; i <= nnz; ++i) {
-            if (indices[i] > n || indices[i] < 1)
+        for (i = 0; i < dimension(); ++i) { dense[i] = 0.0; }
+        for (i = 1; i <= sparseSize(); ++i) {
+            if (indices[i] > dimension() || indices[i] < 1)
                 std::cout << "Out of range index[" << i << "] = " << indices[i] << " -> " << values[i] << std::endl;
             dense[indices[i] - 1] = values[i];
         }
     }
 
-    void SparseVec::entry(int k, std::pair<int, double> &retEntry) {
-        retEntry.first = indices[k];
-        retEntry.second = values[k];
-    }
+//    void SparseVec::entry(int k, std::pair<int, double> &retEntry) {
+//        retEntry.first = indices[k];
+//        retEntry.second = values[k];
+//    }
 
     // sets capacity (also invalidates any data)
     void SparseVec::setCapacity(int size) {
-        nnz = 0;
-        delete [](indices + 1);
-        delete [](values + 1);
-        indices = ((int *)new int[size]) - 1;
-        values = ((double *)new double[size]) - 1;
+        int dim = dimension();
+        if(indices != NULL) {
+            delete[] indices;
+            delete[] values;
+        }
+        indices = new int[size+1];
+        values = new double[size+1];
+        sparseSize() = 0;
+        setDimension(dim);
     }
 
 
@@ -101,9 +107,9 @@ namespace glpkpp {
 
     std::ostream &operator<<(std::ostream &out, const SparseVec &sVector) {
         int i;
-        double dense[sVector.n];
+        double dense[sVector.dimension()];
         sVector.toDense(dense);
-        for (i = 0; i < sVector.n; ++i) out << std::setw(12) << dense[i] << "\t";
+        for (i = 0; i < sVector.dimension(); ++i) out << std::setw(12) << dense[i] << "\t";
         return out;
     }
 };

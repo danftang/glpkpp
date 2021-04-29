@@ -14,11 +14,18 @@ public:
         push_back(std::pair<double,int>(coefficient, variable.id));
     }
 
-    LinearSum &operator +(const LinearSum &term) {
+
+    LinearSum &operator +=(const LinearSum &term) {
         for(auto entry: term) {
             push_back(entry);
         }
         return *this;
+    }
+
+
+    friend LinearSum operator +(LinearSum lhs, const LinearSum &rhs) {
+        lhs += rhs;
+        return lhs; // should use move constructor (or elision?)
     }
 
 
@@ -42,6 +49,8 @@ inline Constraint operator <=(double c, const LinearSum &linExp) {
 inline LinearSum operator *(double coefficient, const X &variable) {
     return LinearSum(coefficient, variable);
 }
+
+
 
 
 

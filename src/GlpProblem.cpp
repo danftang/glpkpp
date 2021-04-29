@@ -7,23 +7,28 @@
 
 namespace glpkpp {
 
-    void GlpProblem::getObjective(SparseVec &obj) {
-        obj.clear();
+    SparseVec GlpProblem::getObjective() {
+        SparseVec obj(nVars());
         int nVars = glp_get_num_cols(lp);
         double c;
         for (int j = 1; j <= nVars; ++j) {
             c = glp_get_obj_coef(lp, j);
             if (c != 0.0) obj.add(j, c);
         }
+        return obj;
     }
 
 
-    void GlpProblem::row(int i, SparseVec &rowVec) {
-        rowVec.nnz = glp_get_mat_row(lp, i, rowVec.indices, rowVec.values);
+    SparseVec GlpProblem::row(int i) {
+        SparseVec rowVec(nVars());
+        rowVec.sparseSize() = glp_get_mat_row(lp, i, rowVec.indices, rowVec.values);
+        return rowVec;
     }
 
-    void GlpProblem::col(int j, SparseVec &colVec) {
-        colVec.nnz = glp_get_mat_col(lp, j, colVec.indices, colVec.values);
+    SparseVec GlpProblem::col(int j) {
+        SparseVec colVec(nConstraints());
+        colVec.sparseSize() = glp_get_mat_col(lp, j, colVec.indices, colVec.values);
+        return colVec;
     }
 
     double GlpProblem::rowLowerBound(int i) {
@@ -45,7 +50,7 @@ namespace glpkpp {
     void GlpProblem::addConstraint(const Constraint &constraint) {
         if(constraint.coefficients.size() == 1) { // monomial
             auto entry = *constraint.coefficients.begin();
-            ensurenVars(entry.first);
+            ensureNVars(entry.first);
             glp_set_col_bnds(lp, entry.first, constraint.glpBoundType(),
                              constraint.lowerBound/entry.second,
                              constraint.upperBound/entry.second
@@ -53,13 +58,13 @@ namespace glpkpp {
         } else {
             int newRow = glp_add_rows(lp, 1);
             SparseVec sparseRow(nVars(), constraint.coefficients);
-            ensurenVars(sparseRow.maxNonZeroIndex());
-            glp_set_mat_row(lp, newRow, sparseRow.nnz, sparseRow.indices, sparseRow.values);
+            ensureNVars(sparseRow.maxNonZeroIndex());
+            glp_set_mat_row(lp, newRow, sparseRow.sparseSize(), sparseRow.indices, sparseRow.values);
             glp_set_row_bnds(lp, newRow, constraint.glpBoundType(), constraint.lowerBound, constraint.upperBound);
         }
     }
 
-    void GlpProblem::ensurenVars(int n) {
+    void GlpProblem::ensureNVars(int n) {
         if(n > nVars()) {
             glp_add_cols(lp, n - nVars());
         }
@@ -73,8 +78,8 @@ namespace glpkpp {
                );
     }
 
-    void GlpProblem::setObjective(const Constraint &obj) {
-        for(auto entry: obj.coefficients) {
+    void GlpProblem::setObjective(const LinearSum &sum) {
+        for(auto entry: sum) {
             glp_set_obj_coef(lp, entry.first, entry.second);
         }
     }
@@ -91,13 +96,10 @@ namespace glpkpp {
             default:
                 out << "Unknown objective type ";
         }
-        SparseVec rowVec(prob.nVars());
-        prob.getObjective(rowVec);
-        out << rowVec << std::endl;
+        out << prob.getObjective() << std::endl;
         out << "Subject to:" << std::endl;
         for (int i = 1; i <= prob.nConstraints(); ++i) {
-            prob.row(i, rowVec);
-            out << prob.rowLowerBound(i) << " <= " << rowVec << " <= " << prob.rowUpperBound(i) << std::endl;
+            out << prob.rowLowerBound(i) << " <= " << prob.row(i) << " <= " << prob.rowUpperBound(i) << std::endl;
         }
         for (int j = 1; j <= prob.nVars(); ++j) {
             out << prob.colLowerBound(j) << " <= x[" << j << "] <= " << prob.colUpperBound(j) << std::endl;

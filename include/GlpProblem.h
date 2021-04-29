@@ -24,12 +24,15 @@ public:
     int nConstraints()  { return glp_get_num_rows(lp); }
     int nVars()         { return glp_get_num_cols(lp); } // not including artificial (auxiliary) vars
 
-    void addConstraint(const Constraint &constraint);
-    void setObjective(const Constraint &);
+    void ensureNVars(int n); // ensures that there are at least n columns in the problem matrix
 
-    void getObjective(SparseVec &);
-    void row(int i, SparseVec &);
-    void col(int j, SparseVec &);
+    void addConstraint(const Constraint &constraint);
+    int addNConstraints(int n) { return glp_add_rows(lp, n); }
+    void setObjective(const LinearSum &);
+
+    SparseVec getObjective();
+    SparseVec row(int i);
+    SparseVec col(int j);
     double rowLowerBound(int i);
     double rowUpperBound(int i);
     double colLowerBound(int j);
@@ -42,7 +45,6 @@ protected:
 
     static int glpBoundsType(double lowerBound, double upperBound);
 
-    void ensurenVars(int n);
 };
 
 std::ostream &operator <<(std::ostream &out, GlpProblem &prob);
