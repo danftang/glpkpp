@@ -80,7 +80,7 @@ namespace glpkpp {
 
     void GlpProblem::setObjective(const LinearSum &sum) {
         for(auto entry: sum) {
-            glp_set_obj_coef(lp, entry.first, entry.second);
+            glp_set_obj_coef(lp, entry.second, entry.first);
         }
     }
 
