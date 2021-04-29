@@ -16,8 +16,13 @@ public:
         glp_set_obj_dir(lp, GLP_MIN);
     }
 
+    GlpProblem(GlpProblem &&moveFrom) noexcept {
+        lp = moveFrom.lp;
+        moveFrom.lp = NULL;
+    }
+
     ~GlpProblem() {
-        glp_delete_prob(lp);
+        if(lp != NULL) glp_delete_prob(lp);
     }
 
 
