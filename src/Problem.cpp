@@ -5,9 +5,9 @@
 #include <iostream>
 #include "../include/glpkpp.h"
 
-namespace glpkpp {
+namespace glp {
 
-    SparseVec GlpProblem::getObjective() {
+    SparseVec Problem::getObjective() {
         SparseVec obj(nVars());
         int nVars = glp_get_num_cols(lp);
         double c;
@@ -19,35 +19,19 @@ namespace glpkpp {
     }
 
 
-    SparseVec GlpProblem::row(int i) {
+    SparseVec Problem::getMatRow(int i) {
         SparseVec rowVec(nVars());
         rowVec.sparseSize() = glp_get_mat_row(lp, i, rowVec.indices, rowVec.values);
         return rowVec;
     }
 
-    SparseVec GlpProblem::col(int j) {
+    SparseVec Problem::getMatCol(int j) {
         SparseVec colVec(nConstraints());
         colVec.sparseSize() = glp_get_mat_col(lp, j, colVec.indices, colVec.values);
         return colVec;
     }
 
-    double GlpProblem::rowLowerBound(int i) {
-        return glp_get_row_lb(lp, i);
-    }
-
-    double GlpProblem::rowUpperBound(int i) {
-        return glp_get_row_ub(lp, i);
-    }
-
-    double GlpProblem::colLowerBound(int j) {
-        return glp_get_col_lb(lp, j);
-    }
-
-    double GlpProblem::colUpperBound(int j) {
-        return glp_get_col_ub(lp, j);
-    }
-
-    void GlpProblem::addConstraint(const Constraint &constraint) {
+    void Problem::addConstraint(const Constraint &constraint) {
         if(constraint.coefficients.size() == 1) { // monomial
             auto entry = *constraint.coefficients.begin();
             ensureNVars(entry.first);
@@ -64,13 +48,13 @@ namespace glpkpp {
         }
     }
 
-    void GlpProblem::ensureNVars(int n) {
+    void Problem::ensureNVars(int n) {
         if(n > nVars()) {
             glp_add_cols(lp, n - nVars());
         }
     }
 
-    int GlpProblem::glpBoundsType(double lowerBound, double upperBound) {
+    int Problem::glpBoundsType(double lowerBound, double upperBound) {
         return lowerBound == -std::numeric_limits<double>::infinity()?
                (upperBound == std::numeric_limits<double>::infinity()?GLP_FR:GLP_UP):
                (upperBound == std::numeric_limits<double>::infinity()?
@@ -78,13 +62,13 @@ namespace glpkpp {
                );
     }
 
-    void GlpProblem::setObjective(const LinearSum &sum) {
+    void Problem::setObjective(const LinearSum &sum) {
         for(auto entry: sum) {
             glp_set_obj_coef(lp, entry.second, entry.first);
         }
     }
 
-    std::ostream &operator<<(std::ostream &out, GlpProblem &prob) {
+    std::ostream &operator<<(std::ostream &out, Problem &prob) {
         out << "Problem has " << prob.nConstraints() << " constraints and " << prob.nVars() << " variables." << std::endl;
         switch (glp_get_obj_dir(prob.lp)) {
             case GLP_MIN:
@@ -99,10 +83,10 @@ namespace glpkpp {
         out << prob.getObjective() << std::endl;
         out << "Subject to:" << std::endl;
         for (int i = 1; i <= prob.nConstraints(); ++i) {
-            out << prob.rowLowerBound(i) << " <= " << prob.row(i) << " <= " << prob.rowUpperBound(i) << std::endl;
+            out << prob.getRowLb(i) << " <= " << prob.getMatRow(i) << " <= " << prob.getRowUb(i) << std::endl;
         }
         for (int j = 1; j <= prob.nVars(); ++j) {
-            out << prob.colLowerBound(j) << " <= x[" << j << "] <= " << prob.colUpperBound(j) << std::endl;
+            out << prob.getColLb(j) << " <= x[" << j << "] <= " << prob.getColUb(j) << std::endl;
         }
         return out;
     }

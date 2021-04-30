@@ -6,7 +6,7 @@
 #include "../include/Constraint.h"
 
 
-namespace glpkpp {
+namespace glp {
     int Constraint::glpBoundType() const {
         return lowerBound == -std::numeric_limits<double>::infinity()?
                (upperBound == std::numeric_limits<double>::infinity()?GLP_FR:GLP_UP):

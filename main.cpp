@@ -1,11 +1,11 @@
 #include <iostream>
 #include "include/glpkpp.h"
 
-using namespace glpkpp;
+using namespace glp;
 
 int main() {
 
-    GlpProblem myProb;
+    Problem myProb;
 
     myProb.addConstraint(1.0*X(1) + 1.0*X(2) + 1.0*X(3) <= 100.0);
     myProb.addConstraint(10.0*X(1) + 4.0*X(2) + 5.0*X(3) <= 600.0);
@@ -17,7 +17,7 @@ int main() {
     myProb.stdBasis();
     myProb.warmUp();
 
-    glpkpp::GlpSimplex mySimplex(myProb);
+    glp::Simplex mySimplex(myProb);
 
     std::cout << myProb;
     std::cout << mySimplex << std::endl;

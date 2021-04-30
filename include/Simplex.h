@@ -6,13 +6,13 @@
 #define GLPKTEST_GLPSIMPLEX_H
 
 
-class GlpSimplex: public SPXLP {
+class Simplex: public SPXLP {
 public:
     int *map;       // map of variables in this simplex to those of the original problem
     double *pi;     // reduced objective = c_B*B'*N + c_N = pi*N + c_N
 
-    GlpSimplex(const GlpProblem &prob);
-    ~GlpSimplex();
+    Simplex(const Problem &prob);
+    ~Simplex();
 
 
     void tableauRow(int i, double row[]);
@@ -23,7 +23,7 @@ public:
 
 };
 
-std::ostream &operator <<(std::ostream &out, GlpSimplex &simplex);
+std::ostream &operator <<(std::ostream &out, Simplex &simplex);
 
 
 #endif //GLPKTEST_GLPSIMPLEX_H

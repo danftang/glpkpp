@@ -9,9 +9,9 @@ extern "C" {
     #include "spxprob.h"
 };
 
-namespace glpkpp {
+namespace glp {
 
-    GlpSimplex::GlpSimplex(const GlpProblem &prob) {
+    Simplex::Simplex(const Problem &prob) {
         glp_prob *P = prob.lp;
         spx_init_lp(this, P, 1);
         spx_alloc_lp(this);
@@ -24,19 +24,19 @@ namespace glpkpp {
     }
 
 
-    GlpSimplex::~GlpSimplex() {
+    Simplex::~Simplex() {
         spx_free_lp(this);
         delete[] map;
         delete[] pi;
     }
 
-    void GlpSimplex::tableauRow(int i, double *trow) {
+    void Simplex::tableauRow(int i, double *trow) {
         double rho[m + 1];
         spx_eval_rho(this, i, rho);
         spx_eval_trow(this, rho, trow);
     }
 
-    double GlpSimplex::reducedObjective(int j) {
+    double Simplex::reducedObjective(int j) {
         if (pi[0] == 0.0) {
             spx_eval_pi(this, pi);
             pi[0] = 1.0;
@@ -49,7 +49,7 @@ namespace glpkpp {
 // if leavingVarToUpperBound is true then the leaving var is set to its upper bound
 // pivotCol - if non-null should be set to the current ftran of the incoming column,
 // if null this will be calculated
-    void GlpSimplex::pivot(int i, int j, bool leavingVarToUpperBound, double *pivotCol) {
+    void Simplex::pivot(int i, int j, bool leavingVarToUpperBound, double *pivotCol) {
         const int boundFlag = leavingVarToUpperBound ? 1 : 0;
         double *pivCol;
         if (pivotCol == NULL) {
@@ -65,11 +65,11 @@ namespace glpkpp {
         if (pivotCol == NULL) delete[] pivCol;
     }
 
-    void GlpSimplex::tableauCol(int j, double *col) {
+    void Simplex::tableauCol(int j, double *col) {
         spx_eval_tcol(this, j, col);
     }
 
-    std::ostream &operator<<(std::ostream &out, GlpSimplex &simplex) {
+    std::ostream &operator<<(std::ostream &out, Simplex &simplex) {
         const int nCols = simplex.n - simplex.m;
         double row[nCols + 1];
 

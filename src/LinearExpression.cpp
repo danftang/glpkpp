@@ -3,5 +3,5 @@
 //
 #include "../include/glpkpp.h"
 
-namespace glpkpp {
+namespace glp {
 };

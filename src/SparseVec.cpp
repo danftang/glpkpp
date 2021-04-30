@@ -6,7 +6,7 @@
 #include <iostream>
 #include "../include/glpkpp.h"
 
-namespace glpkpp {
+namespace glp {
     SparseVec::SparseVec(int dim, int capacity) {
         int cap = capacity==-1?dim:capacity;
         indices = new int[cap+1]; // one based indexing :-(

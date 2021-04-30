@@ -6,22 +6,22 @@
 #ifndef GLPKTEST_GLPPROBLEM_H
 #define GLPKTEST_GLPPROBLEM_H
 
-class GlpProblem {
+class Problem {
 public:
     glp_prob *lp;
 
 public:
-    GlpProblem() {
+    Problem() {
         lp = glp_create_prob();
         glp_set_obj_dir(lp, GLP_MIN);
     }
 
-    GlpProblem(GlpProblem &&moveFrom) noexcept {
+    Problem(Problem &&moveFrom) noexcept {
         lp = moveFrom.lp;
         moveFrom.lp = NULL;
     }
 
-    ~GlpProblem() {
+    ~Problem() {
         if(lp != NULL) glp_delete_prob(lp);
     }
 
@@ -32,17 +32,17 @@ public:
     void ensureNVars(int n); // ensures that there are at least n columns in the problem matrix
 
     void addConstraint(const Constraint &constraint);
-    int addNConstraints(int n) { return glp_add_rows(lp, n); }
     void setObjective(const LinearSum &);
-
     SparseVec getObjective();
-    SparseVec row(int i);
-    SparseVec col(int j);
-    double rowLowerBound(int i);
-    double rowUpperBound(int i);
-    double colLowerBound(int j);
-    double colUpperBound(int j);
 
+    // glpk interface
+    SparseVec getMatRow(int i);
+    SparseVec getMatCol(int j);
+    int addRows(int n) { return glp_add_rows(lp, n); }
+    double getRowLb(int i) const { return glp_get_row_lb(lp, i); }
+    double getRowUb(int i) const { return glp_get_row_ub(lp, i); }
+    double getColLb(int j) const { return glp_get_col_lb(lp, j); }
+    double getColUb(int j) const { return glp_get_col_ub(lp, j); }
     void stdBasis() { glp_std_basis(lp); }
     void warmUp()   { glp_warm_up(lp); }
 
@@ -52,6 +52,6 @@ protected:
 
 };
 
-std::ostream &operator <<(std::ostream &out, GlpProblem &prob);
+std::ostream &operator <<(std::ostream &out, Problem &prob);
 
 #endif //GLPKTEST_GLPPROBLEM_H

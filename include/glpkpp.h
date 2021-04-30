@@ -19,13 +19,13 @@ extern "C" {
 };
 
 
-namespace glpkpp {
+namespace glp {
     #include "SparseVec.h"
     #include "X.h"
     #include "Constraint.h"
     #include "LinearSum.h"
-    #include "GlpProblem.h"
-    #include "GlpSimplex.h"
+    #include "Problem.h"
+    #include "Simplex.h"
 };
 
 #endif //GLPKPP_GLPKPP_H
