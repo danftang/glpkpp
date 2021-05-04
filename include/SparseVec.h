@@ -48,6 +48,13 @@ public:
 
     int maxNonZeroIndex();
 
+    double operator[](int index) {
+        for(int i = 1;i<=sparseSize(); ++i) {
+            if(indices[i] == index) return values[i];
+        }
+        return 0.0;
+    }
+
     SparseVec &operator =(const SparseVec &lvalue) {
         ensureCapacity(lvalue.sparseSize());
         std::copy(lvalue.indices, lvalue.indices + lvalue.sparseSize(), indices);

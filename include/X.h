@@ -10,6 +10,8 @@ class X {
 public:
     int id;
     X(int id) { this->id = id; }
+
+    operator int() { return id; }
 };
 
 

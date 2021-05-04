@@ -9,6 +9,7 @@
 // Represents a sum of terms sum_i c_ix_i
 class LinearSum: public std::vector<std::pair<double,int>> {
 public:
+    explicit LinearSum(int capacity): std::vector<std::pair<double,int>>(capacity) { }
 
     LinearSum(double coefficient, const X &variable) {
         push_back(std::pair<double,int>(coefficient, variable.id));
@@ -49,10 +50,6 @@ inline Constraint operator <=(double c, const LinearSum &linExp) {
 inline LinearSum operator *(double coefficient, const X &variable) {
     return LinearSum(coefficient, variable);
 }
-
-
-
-
 
 
 #endif //GLPKPP_LAZYLINEAREXPRESSION_H
