@@ -80,16 +80,18 @@ namespace glp {
 //    }
 
     // sets capacity (also invalidates any data)
-    void SparseVec::setCapacity(int size) {
-        int dim = dimension();
-        if(indices != NULL) {
-            delete[] indices;
-            delete[] values;
+    void SparseVec::ensureCapacity(int size) {
+        if(capacity() < size) {
+            int dim = dimension();
+            if (indices != NULL) {
+                delete[] indices;
+                delete[] values;
+            }
+            indices = new int[size + 1];
+            values = new double[size + 1];
+            sparseSize() = 0;
+            setDimension(dim);
         }
-        indices = new int[size+1];
-        values = new double[size+1];
-        sparseSize() = 0;
-        setDimension(dim);
     }
 
 
