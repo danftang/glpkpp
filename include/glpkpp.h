@@ -7,7 +7,7 @@
 
 #include <ostream>
 #include <cstdlib>
-#include <ostream>
+#include <iostream>
 #include <map>
 #include <functional>
 #include <limits>
@@ -22,8 +22,8 @@ extern "C" {
 namespace glp {
     #include "SparseVec.h"
     #include "X.h"
-    #include "Constraint.h"
     #include "LinearSum.h"
+    #include "Constraint.h"
     #include "Problem.h"
     #include "Simplex.h"
 };

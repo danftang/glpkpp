@@ -8,7 +8,7 @@
 namespace glp {
 
     SparseVec Problem::getObjective() {
-        SparseVec obj(nVars());
+        SparseVec obj;
         int nVars = glp_get_num_cols(lp);
         double c;
         for (int j = 1; j <= nVars; ++j) {
@@ -21,29 +21,36 @@ namespace glp {
 
     SparseVec Problem::getMatRow(int i) {
         SparseVec rowVec(nVars());
-        rowVec.sparseSize() = glp_get_mat_row(lp, i, rowVec.indices, rowVec.values);
+        rowVec.resize(nVars());
+        int newSize = glp_get_mat_row(lp, i, rowVec.glpkIndexArray(), rowVec.glpkValueArray());
+        rowVec.resize(newSize);
         return rowVec;
     }
 
     SparseVec Problem::getMatCol(int j) {
         SparseVec colVec(nConstraints());
-        colVec.sparseSize() = glp_get_mat_col(lp, j, colVec.indices, colVec.values);
+        colVec.resize(nConstraints());
+        int newSize = glp_get_mat_col(lp, j, colVec.glpkIndexArray(), colVec.glpkValueArray());
+        colVec.resize(newSize);
         return colVec;
     }
 
     void Problem::addConstraint(const Constraint &constraint) {
-        if(constraint.coefficients.size() == 1) { // monomial
-            auto entry = *constraint.coefficients.begin();
-            ensureNVars(entry.first);
-            glp_set_col_bnds(lp, entry.first, constraint.glpBoundType(),
-                             constraint.lowerBound/entry.second,
-                             constraint.upperBound/entry.second
+        if(constraint.coefficients.sparseSize() == 1) { // monomial
+            int varId = constraint.coefficients.indices[0];
+            double coeff = constraint.coefficients.values[0];
+            ensureNVars(varId);
+            glp_set_col_bnds(lp, varId, constraint.glpBoundType(),
+                             constraint.lowerBound/coeff,
+                             constraint.upperBound/coeff
                              );
         } else {
             int newRow = glp_add_rows(lp, 1);
-            SparseVec sparseRow(nVars(), constraint.coefficients);
-            ensureNVars(sparseRow.maxNonZeroIndex());
-            glp_set_mat_row(lp, newRow, sparseRow.sparseSize(), sparseRow.indices, sparseRow.values);
+//            SparseVec sparseRow(nVars(), constraint.coefficients);
+            ensureNVars(constraint.coefficients.maxNonZeroIndex());
+            glp_set_mat_row(lp, newRow, constraint.coefficients.sparseSize(),
+                            constraint.coefficients.glpkIndexArray(),
+                            constraint.coefficients.glpkValueArray());
             glp_set_row_bnds(lp, newRow, constraint.glpBoundType(), constraint.lowerBound, constraint.upperBound);
         }
     }
@@ -63,8 +70,8 @@ namespace glp {
     }
 
     void Problem::setObjective(const LinearSum &sum) {
-        for(auto entry: sum) {
-            glp_set_obj_coef(lp, entry.second, entry.first);
+        for(int i=0; i<sum.sparseSize(); ++i) {
+            glp_set_obj_coef(lp, sum.indices[i], sum.values[i]);
         }
     }
 

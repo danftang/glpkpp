@@ -7,49 +7,60 @@
 
 
 // Represents a sum of terms sum_i c_ix_i
-class LinearSum: public std::vector<std::pair<double,int>> {
-public:
-    explicit LinearSum(int capacity): std::vector<std::pair<double,int>>(capacity) { }
+class Constraint;
 
-    LinearSum(double coefficient, const X &variable) {
-        push_back(std::pair<double,int>(coefficient, variable.id));
+class LinearSum: public SparseVec {
+public:
+    LinearSum() { }
+
+//    explicit LinearSum(int sparseSize): SparseVec(sparseSize) { }
+
+    LinearSum(LinearSum &&rvalue) {
+        swap(rvalue);
     }
 
+    LinearSum(const LinearSum &lvalue): SparseVec(lvalue) { }
 
     LinearSum &operator +=(const LinearSum &term) {
-        for(auto entry: term) {
-            push_back(entry);
-        }
+        SparseVec::operator +=(term);
         return *this;
     }
 
+    // copy semantics
+    LinearSum &operator =(const LinearSum &lvalue) {
+        SparseVec::operator=(lvalue);
+        return *this;
+    }
+
+    // move semantics
+    LinearSum &operator =(LinearSum &&rvalue) {
+        swap(rvalue);
+        return *this;
+    }
+
+
+    // dot product
+    double dotProduct(const SparseVec &vec);
 
     friend LinearSum operator +(LinearSum lhs, const LinearSum &rhs) {
         lhs += rhs;
         return lhs; // should use move constructor (or elision?)
     }
 
+    Constraint operator ==(double c) const ;
 
-    Constraint operator ==(double c) const {
-        return Constraint(c, *this, c);
-    }
+    Constraint operator <=(double c) const;
 
-    Constraint operator <=(double c) const {
-        return Constraint(-std::numeric_limits<double>::infinity(), *this, c);
-    }
-
-    Constraint operator >=(double c) const {;
-        return Constraint(c, *this, std::numeric_limits<double>::infinity());
-    }
+    Constraint operator >=(double c) const;
 };
 
-inline Constraint operator <=(double c, const LinearSum &linExp) {
-    return linExp >= c;
+inline LinearSum operator *(double coefficient, const X &variable) {
+    LinearSum term;
+    term.add(variable, coefficient);
+    return term;
 }
 
-inline LinearSum operator *(double coefficient, const X &variable) {
-    return LinearSum(coefficient, variable);
-}
+std::ostream &operator<<(std::ostream &out, const LinearSum &sVector);
 
 
 #endif //GLPKPP_LAZYLINEAREXPRESSION_H

@@ -22,30 +22,24 @@ namespace glp {
     }
 
 
-    Constraint::Constraint(double lowerBound, double upperBound) {
-        this->lowerBound = lowerBound;
-        this->upperBound = upperBound;
-    }
+    Constraint::Constraint(double lowerBound, double upperBound):
+    upperBound(upperBound),
+    lowerBound(lowerBound) { }
 
 
-    Constraint::Constraint(double lowerBound, const LinearSum &sum, double upperBound): Constraint(lowerBound,upperBound) {
-        for(auto entry: sum) {
-            coefficients[entry.second] = entry.first;
-        }
-    }
+    Constraint::Constraint(double lowerBound, const LinearSum &sum, double upperBound):
+    coefficients(sum),
+    upperBound(upperBound),
+    lowerBound(lowerBound) { }
 
-    Constraint &Constraint::operator+=(std::pair<double, X> &entry) {
-        coefficients[entry.second.id] += entry.first;
-        return *this;
-    }
+//    Constraint &Constraint::operator+=(std::pair<double, X> &entry) {
+//        coefficients[entry.second.id] += entry.first;
+//        return *this;
+//    }
 
 
     std::ostream &operator <<(std::ostream &out, const Constraint &constraint) {
-        out << constraint.lowerBound << " <= ";
-        for(auto entry: constraint.coefficients) {
-            out << entry.second << "X" << entry.first << " + ";
-        }
-        out << " <= " << constraint.upperBound;
+        out << constraint.lowerBound << " <= " << constraint.coefficients << " <= " << constraint.upperBound;
         return  out;
     }
 

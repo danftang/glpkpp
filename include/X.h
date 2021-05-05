@@ -11,7 +11,7 @@ public:
     int id;
     X(int id) { this->id = id; }
 
-    operator int() { return id; }
+    operator int() const { return id; }
 };
 
 

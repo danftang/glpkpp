@@ -7,82 +7,83 @@
 
 class SparseVec {
 public:
-    int *indices;   // one-based array of indices of non-zero elements (zero'th element stores number of non-zeros)
-    double *values; // one-based array of values of non-zero elements (zero'th element stores dimension of this vector)
+    std::vector<int> indices;   // one-based array of indices of non-zero elements (zero'th element stores number of non-zeros)
+    std::vector<double> values; // one-based array of values of non-zero elements (zero'th element stores dimension of this vector)
 
-    struct Header {
-        int dimension;
-        int capacity;
-    };
+    SparseVec() { }
 
-    SparseVec(int dimension, int capacity=-1);
-    SparseVec(int dimension, const std::map<int,double> &);
+    SparseVec(int sparseSize): indices(sparseSize), values(sparseSize) { }
+
     SparseVec(SparseVec &&rvalue) { // move semantics
-        moveFrom(rvalue);
-    }
-    SparseVec(const SparseVec &lvalue): SparseVec(lvalue.dimension(), lvalue.sparseSize()) { // copy semantics
-        std::copy(lvalue.indices, lvalue.indices + lvalue.sparseSize(), indices);
-        std::copy(lvalue.values, lvalue.values + lvalue.sparseSize(), values);
+        swap(rvalue);
     }
 
-    ~SparseVec();
+    SparseVec(const SparseVec &lvalue): indices(lvalue.indices), values(lvalue.values) { // copy semantics
+    }
 
 //    double operator [](int i) const;
 //    double &operator [](int i);
 
-    int sparseSize() const { return indices[0]; }
-    int &sparseSize() { return indices[0]; }
+    int sparseSize() const { return indices.size(); }
 
-    void toDense(double *denseVec) const;
-//    std::pair<int,double> entry(int k) const;
+    void toDense(double *denseVec, int size) const;
     void add(int i, double v);
     void clear();
-    int capacity() const { return indices==NULL?0:header().capacity; }
-    void ensureCapacity(int size);
-    int dimension() const { return indices==NULL?0:header().dimension; }
-    void setDimension(int dim) {
-        if(indices == NULL) ensureCapacity(0);
-        header().dimension = dim;
-    }
+//    int capacity() const { return std::min(indices.capacity(),values.capacity()); }
+//    int dimension() const { return (int)values[0]; }
+    void resize(int size) { indices.resize(size); values.resize(size); }
+
+    int *glpkIndexArray() { return indices.data() - 1; }
+    double *glpkValueArray() { return values.data() - 1; }
+
+    const int *glpkIndexArray() const { return indices.data() - 1; }
+    const double *glpkValueArray() const { return values.data() - 1; }
+
+    //    void setDimension(int dim) { values[0] = (double)dim; }
 //    double dotProd(double *dense) const;
 
-    int maxNonZeroIndex();
+    int maxNonZeroIndex() const;
 
     double operator[](int index) {
-        for(int i = 1;i<=sparseSize(); ++i) {
+        for(int i = 0;i<sparseSize(); ++i) {
             if(indices[i] == index) return values[i];
         }
         return 0.0;
     }
 
-    SparseVec &operator =(const SparseVec &lvalue) {
-        ensureCapacity(lvalue.sparseSize());
-        std::copy(lvalue.indices, lvalue.indices + lvalue.sparseSize(), indices);
-        std::copy(lvalue.values, lvalue.values + lvalue.sparseSize(), values);
+    SparseVec &operator +=(const SparseVec &other) {
+        for(int i=0; i < other.sparseSize(); ++i) {
+            add(other.indices[i], other.values[i]);
+        }
         return *this;
     }
 
+    friend SparseVec operator +(SparseVec lhs, const SparseVec &rhs) {
+        lhs += rhs;
+        return lhs; // should use move constructor (or elision?)
+    }
+
+
+
+    // copy semantics
+    SparseVec &operator =(const SparseVec &lvalue) {
+        indices = lvalue.indices;
+        values = lvalue.values;
+        return *this;
+    }
+
+    // move semantics
     SparseVec &operator =(SparseVec &&rvalue) {
-        moveFrom(rvalue);
+        swap(rvalue);
         return *this;
     }
 
 protected:
-    void moveFrom(SparseVec &rvalue) {
-        indices = rvalue.indices;
-        values = rvalue.values;
-        rvalue.indices = NULL;
+    void swap(SparseVec &rvalue) {
+//        std::cout << "Moving " << rvalue.indices << std::endl;
+        indices.swap(rvalue.indices);
+        values.swap(rvalue.values);
     }
-
-    Header &header() {
-        return *(Header *)values;
-    }
-
-    const Header &header() const {
-        return *(const Header *)values;
-    }
-
-
 
 };
 

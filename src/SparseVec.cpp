@@ -7,30 +7,22 @@
 #include "../include/glpkpp.h"
 
 namespace glp {
-    SparseVec::SparseVec(int dim, int capacity) {
-        int cap = capacity==-1?dim:capacity;
-        indices = new int[cap+1]; // one based indexing :-(
-        values = new double[cap+1];
-        setDimension(dim);
-        sparseSize() = 0;
-    }
+//    SparseVec::SparseVec(int dim, int capacity):
+//    indices(capacity==-1?dim+1:capacity+1),
+//    values(capacity==-1?dim+1:capacity+1) {
+//        setDimension(dim);
+//    }
 
 
-    SparseVec::SparseVec(int dimension, const std::map<int, double> &entries): SparseVec(dimension, entries.size()) {
-        for(auto entry: entries) add(entry.first, entry.second);
-    }
+//    SparseVec::SparseVec(int dimension, const std::map<int, double> &entries): SparseVec(dimension, entries.size()) {
+//        for(auto entry: entries) add(entry.first, entry.second);
+//    }
 
 
-    SparseVec::~SparseVec() {
-        if(indices != NULL) {
-            delete[] indices;
-            delete[] values;
-        }
-    }
 
-    int SparseVec::maxNonZeroIndex() {
+    int SparseVec::maxNonZeroIndex() const {
         int max = 0;
-        for(int i=1; i<=sparseSize(); ++i) {
+        for(int i=0; i<sparseSize(); ++i) {
             if(indices[i] > max) max = indices[i];
         }
         return max;
@@ -52,23 +44,26 @@ namespace glp {
 //        return 0.0;
 //    }
 
+    // Adds element,
+    // doesn't delete if index already exists
     void SparseVec::add(int i, double v) {
         if (v != 0.0) {
-            indices[++sparseSize()] = i;
-            values[sparseSize()] = v;
-        } // doesn't delete if index already exists
+            indices.push_back(i);
+            values.push_back(v);
+        }
     }
 
     void SparseVec::clear() {
-        sparseSize() = 0;
+        indices.clear();
+        values.clear();
     }
 
     // to zero-based dense array
-    void SparseVec::toDense(double *dense) const {
+    void SparseVec::toDense(double *dense, int size) const {
         int i;
-        for (i = 0; i < dimension(); ++i) { dense[i] = 0.0; }
-        for (i = 1; i <= sparseSize(); ++i) {
-            if (indices[i] > dimension() || indices[i] < 1)
+        for (i = 0; i < size; ++i) { dense[i] = 0.0; }
+        for (i = 0; i < sparseSize(); ++i) {
+            if (indices[i] > size || indices[i] < 1)
                 std::cout << "Out of range index[" << i << "] = " << indices[i] << " -> " << values[i] << std::endl;
             dense[indices[i] - 1] = values[i];
         }
@@ -78,21 +73,6 @@ namespace glp {
 //        retEntry.first = indices[k];
 //        retEntry.second = values[k];
 //    }
-
-    // sets capacity (also invalidates any data)
-    void SparseVec::ensureCapacity(int size) {
-        if(capacity() < size) {
-            int dim = dimension();
-            if (indices != NULL) {
-                delete[] indices;
-                delete[] values;
-            }
-            indices = new int[size + 1];
-            values = new double[size + 1];
-            sparseSize() = 0;
-            setDimension(dim);
-        }
-    }
 
 
 //    double SparseVec::dotProd(double *dense) const {
@@ -109,9 +89,10 @@ namespace glp {
 
     std::ostream &operator<<(std::ostream &out, const SparseVec &sVector) {
         int i;
-        double dense[sVector.dimension()];
-        sVector.toDense(dense);
-        for (i = 0; i < sVector.dimension(); ++i) out << std::setw(12) << dense[i] << "\t";
+        int iMax = sVector.maxNonZeroIndex();
+        double dense[iMax];
+        sVector.toDense(dense, iMax);
+        for (i = 0; i < iMax; ++i) out << std::setw(12) << dense[i] << "\t";
         return out;
     }
 };

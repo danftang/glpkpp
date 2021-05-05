@@ -1,3 +1,4 @@
+
 //
 // Created by daniel on 26/04/2021.
 //
@@ -5,12 +6,10 @@
 #ifndef GLPKPP_CONSTRAINT_H
 #define GLPKPP_CONSTRAINT_H
 
-class LinearSum;
-
 class Constraint {
 public:
 
-    std::map<int,double> coefficients;
+    LinearSum coefficients;
     double upperBound;
     double lowerBound;
 
@@ -21,17 +20,21 @@ public:
 
     Constraint & operator <=(double upperBound);
 
-    Constraint & operator +=(std::pair<double,X> &);
+//    Constraint & operator +=(std::pair<double,X> &);
 
-    double operator [](int varId) const {
-        auto pValue = coefficients.find(varId);
-        return (pValue == coefficients.end())?0.0:pValue->second;
-    }
-    double & operator [](int varId) { return coefficients[varId]; }
+//    double operator [](int varId) const {
+//        auto pValue = coefficients.find(varId);
+//        return (pValue == coefficients.end())?0.0:pValue->second;
+//    }
+//    double & operator [](int varId) { return coefficients[varId]; }
 
     int glpBoundType() const;
 
 };
+
+inline Constraint operator<=(double c, const LinearSum &linExp) {
+    return linExp >= c;
+}
 
 std::ostream &operator <<(std::ostream &out, const Constraint &constraint);
 
