@@ -38,10 +38,6 @@ public:
         return *this;
     }
 
-
-    // dot product
-    double dotProduct(const SparseVec &vec);
-
     friend LinearSum operator +(LinearSum lhs, const LinearSum &rhs) {
         lhs += rhs;
         return lhs; // should use move constructor (or elision?)

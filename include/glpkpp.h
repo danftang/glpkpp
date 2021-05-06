@@ -12,6 +12,7 @@
 #include <functional>
 #include <limits>
 #include <vector>
+#include <algorithm>
 
 #include "glpk.h"
 extern "C" {

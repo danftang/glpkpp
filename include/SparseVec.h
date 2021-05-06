@@ -44,6 +44,13 @@ public:
 
     int maxNonZeroIndex() const;
 
+    void sort() {
+        std::sort(begin(), end(), [](Entry a, Entry b) {
+            return a.index() < b.index();
+        });
+    }
+
+
     double operator[](int index) {
         for(int i = 0;i<sparseSize(); ++i) {
             if(indices[i] == index) return values[i];
@@ -77,6 +84,149 @@ public:
         swap(rvalue);
         return *this;
     }
+
+
+    class Entry {
+    protected:
+        int _index;
+        double _value;
+
+    public:
+        Entry(int index, double value): _index(index), _value(value) { }
+
+        int index() const { return _index; }
+        double value() const { return _value; }
+
+    };
+
+    class EntryRef {
+    protected:
+        int *pIndex;
+        double *pValue;
+
+    public:
+        EntryRef(int *indexPtr, double *valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
+
+        EntryRef(const EntryRef &other) = default;
+
+        EntryRef(EntryRef &&other) noexcept : pIndex(other.pIndex), pValue(other.pValue) {}
+
+        EntryRef &operator =(const Entry &entry) {
+            *pIndex = entry.index();
+            *pValue = entry.value();
+            return *this;
+        }
+
+        EntryRef &operator =(const EntryRef &other) {
+            *pIndex = other.index();
+            *pValue = other.value();
+            return *this;
+        }
+
+        EntryRef &operator =(EntryRef &&other) noexcept {
+            *pIndex = other.index();
+            *pValue = other.value();
+            return *this;
+        }
+
+        operator Entry() const {
+            return Entry(*pIndex, *pValue);
+        }
+
+        int index() const { return *pIndex; }
+        double value() const { return *pValue; }
+        double &value() { return *pValue; }
+        int &index() { return *pIndex; }
+    };
+
+
+    // Iterator type. Has the unusual character that it returns itself on deference
+    // (the index and value can be accessed/modified via index() and value() members).
+    // However, the value_type of the iterator is Entry. STL only specifies that the
+    // value returned by deference is convertible to value_type, which is satisfied.
+    class Iterator: public std::iterator<std::random_access_iterator_tag, Entry, int, EntryRef *, EntryRef>, EntryRef {
+//        int *pIndex;
+//        double *pValue;
+    public:
+        Iterator(int *indexPtr, double *valuePtr): EntryRef(indexPtr, valuePtr) { }
+        Iterator(const Iterator &other): EntryRef(other.pIndex, other.pValue) { }
+
+//        int index() const { return *pIndex; }
+//        double value() const { return *pValue; }
+//        int &index() { return *pIndex; }
+//        double &value() { return *pValue; }
+
+        Iterator &operator ++() {
+            ++pIndex;
+            ++pValue;
+            return *this;
+        }
+
+        Iterator &operator --() {
+            --pIndex;
+            --pValue;
+            return *this;
+        }
+
+        Iterator operator ++(int) { return Iterator(pIndex++, pValue++); }
+        Iterator operator --(int) { return Iterator(pIndex--, pValue--); }
+
+        Iterator &operator +=(int n) {
+            pIndex += n;
+            pValue += n;
+            return *this;
+        }
+
+        Iterator &operator -=(int n) {
+            pIndex -= n;
+            pValue -= n;
+            return *this;
+        }
+
+        bool operator ==(const Iterator &other) const { return pIndex == other.pIndex; }
+        bool operator !=(const Iterator &other) const { return pIndex != other.pIndex; }
+
+        Iterator operator +(int n) const { return Iterator(pIndex + n, pValue + n); }
+        Iterator operator -(int n) const { return Iterator(pIndex - n, pValue - n); }
+
+        int operator -(const Iterator &other) { return pIndex - other.pIndex; }
+
+        bool operator <(const Iterator &other) { return pIndex < other.pIndex; }
+
+        Iterator operator[](int n) const { return Iterator(pIndex + n, pValue + n); }
+
+//        Iterator &operator =(const Entry &entry) {
+//            *pIndex = entry.index();
+//            *pValue = entry.value();
+//            return *this;
+//        }
+
+        Iterator &operator =(const Iterator &other) {
+            pIndex = other.pIndex;
+            pValue = other.pValue;
+            return *this;
+        }
+
+//        operator Entry() const { return Entry(*pIndex,*pValue); }
+
+//        const Iterator &operator *() const { return *this; }
+        const EntryRef &operator *() const { return *this; }
+        const EntryRef *operator ->() const { return this; }
+        EntryRef &operator *() { return *this; }
+        EntryRef *operator ->() { return this; }
+
+    };
+
+    void test() {
+        Iterator myIt = begin();
+        Iterator myIt2 = end();
+        if(myIt != myIt2) {
+            (*myIt).index() = 4;
+        }
+    }
+
+    Iterator begin() { return Iterator(indices.data(), values.data()); }
+    Iterator end() { return Iterator(indices.data()+indices.size(), NULL); }
 
 protected:
     void swap(SparseVec &rvalue) {

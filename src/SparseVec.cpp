@@ -69,6 +69,8 @@ namespace glp {
         }
     }
 
+
+
 //    void SparseVec::entry(int k, std::pair<int, double> &retEntry) {
 //        retEntry.first = indices[k];
 //        retEntry.second = values[k];

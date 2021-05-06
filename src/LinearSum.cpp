@@ -19,9 +19,6 @@ namespace glp {
         return Constraint(c, *this, std::numeric_limits<double>::infinity());
     }
 
-    double LinearSum::dotProduct(const SparseVec &vec) {
-
-    }
 
     std::ostream &operator<<(std::ostream &out, const LinearSum &sVector) {
         int i;
