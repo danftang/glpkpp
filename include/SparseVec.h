@@ -46,7 +46,7 @@ public:
 
     void sort() {
         std::sort(begin(), end(), [](Entry a, Entry b) {
-            return a.index() < b.index();
+            return a.index < b.index;
         });
     }
 
@@ -85,86 +85,79 @@ public:
         return *this;
     }
 
-
     class Entry {
-    protected:
-        int _index;
-        double _value;
-
     public:
-        Entry(int index, double value): _index(index), _value(value) { }
+        const int index;
+        const double value;
+        Entry(int index, double value): index(index), value(value) { }
+        Entry *operator ->() { return this; }
 
-        int index() const { return _index; }
-        double value() const { return _value; }
+        friend std::ostream &operator <<(std::ostream &out, const Entry &entry) {
+            out << entry.index << "->" << entry.value;
+            return out;
+        }
 
     };
 
     class EntryRef {
-    protected:
-        int *pIndex;
-        double *pValue;
-
     public:
-        EntryRef(int *indexPtr, double *valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
+        int &index;
+        double &value;
 
-        EntryRef(const EntryRef &other) = default;
-
-        EntryRef(EntryRef &&other) noexcept : pIndex(other.pIndex), pValue(other.pValue) {}
+        EntryRef(int &indexPtr, double &valuePtr): index(indexPtr), value(valuePtr) { }
+        EntryRef(const EntryRef &other): EntryRef(other.index, other.value) { };
+        EntryRef(EntryRef &&other) noexcept : EntryRef(other.index, other.value) { }
 
         EntryRef &operator =(const Entry &entry) {
-            *pIndex = entry.index();
-            *pValue = entry.value();
+            index = entry.index;
+            value = entry.value;
             return *this;
         }
 
         EntryRef &operator =(const EntryRef &other) {
-            *pIndex = other.index();
-            *pValue = other.value();
+            index = other.index;
+            value = other.value;
             return *this;
         }
 
         EntryRef &operator =(EntryRef &&other) noexcept {
-            *pIndex = other.index();
-            *pValue = other.value();
+            index = other.index;
+            value = other.value;
             return *this;
         }
 
-        operator Entry() const {
-            return Entry(*pIndex, *pValue);
+        EntryRef *operator->() { return this; }
+
+        operator Entry() const { return Entry(index, value); }
+
+        friend void swap(EntryRef a, EntryRef b) {
+            Entry tmp = a;
+            a = b;
+            b = tmp;
         }
 
-        int index() const { return *pIndex; }
-        double value() const { return *pValue; }
-        double &value() { return *pValue; }
-        int &index() { return *pIndex; }
+        friend std::ostream &operator <<(std::ostream &out, const EntryRef &entryRef) {
+            out << entryRef.index << "->" << entryRef.value;
+            return out;
+        }
     };
 
 
-    // Iterator type. Has the unusual character that it returns itself on deference
-    // (the index and value can be accessed/modified via index() and value() members).
-    // However, the value_type of the iterator is Entry. STL only specifies that the
-    // value returned by deference is convertible to value_type, which is satisfied.
-    class Iterator: public std::iterator<std::random_access_iterator_tag, Entry, int, EntryRef *, EntryRef>, EntryRef {
-//        int *pIndex;
-//        double *pValue;
+    // Iterator returns an EntryRef on deference. This is a proxy class for a reference to the
+    // underlying value. Value type is Entry.
+    class Iterator: public std::iterator<std::random_access_iterator_tag, Entry, int, EntryRef, EntryRef> {
+        int *pIndex;
+        double *pValue;
     public:
-        Iterator(int *indexPtr, double *valuePtr): EntryRef(indexPtr, valuePtr) { }
-        Iterator(const Iterator &other): EntryRef(other.pIndex, other.pValue) { }
-
-//        int index() const { return *pIndex; }
-//        double value() const { return *pValue; }
-//        int &index() { return *pIndex; }
-//        double &value() { return *pValue; }
+        Iterator(int *indexPtr, double *valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
 
         Iterator &operator ++() {
-            ++pIndex;
-            ++pValue;
+            ++pIndex; ++pValue;
             return *this;
         }
 
         Iterator &operator --() {
-            --pIndex;
-            --pValue;
+            --pIndex; --pValue;
             return *this;
         }
 
@@ -172,14 +165,12 @@ public:
         Iterator operator --(int) { return Iterator(pIndex--, pValue--); }
 
         Iterator &operator +=(int n) {
-            pIndex += n;
-            pValue += n;
+            pIndex += n; pValue += n;
             return *this;
         }
 
         Iterator &operator -=(int n) {
-            pIndex -= n;
-            pValue -= n;
+            pIndex -= n; pValue -= n;
             return *this;
         }
 
@@ -195,38 +186,72 @@ public:
 
         Iterator operator[](int n) const { return Iterator(pIndex + n, pValue + n); }
 
-//        Iterator &operator =(const Entry &entry) {
-//            *pIndex = entry.index();
-//            *pValue = entry.value();
-//            return *this;
-//        }
+        EntryRef operator *() { return EntryRef(*pIndex,*pValue); }
+        EntryRef operator ->() { return EntryRef(*pIndex,*pValue); }
 
-        Iterator &operator =(const Iterator &other) {
-            pIndex = other.pIndex;
-            pValue = other.pValue;
+    };
+
+    class ConstIterator: public std::iterator<std::random_access_iterator_tag, Entry, int, Entry *, Entry &> {
+        int *pIndex;
+        double *pValue;
+    public:
+        ConstIterator(int *indexPtr, double *valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
+
+        ConstIterator &operator ++() {
+            ++pIndex; ++pValue;
             return *this;
         }
 
-//        operator Entry() const { return Entry(*pIndex,*pValue); }
+        ConstIterator &operator --() {
+            --pIndex; --pValue;
+            return *this;
+        }
 
-//        const Iterator &operator *() const { return *this; }
-        const EntryRef &operator *() const { return *this; }
-        const EntryRef *operator ->() const { return this; }
-        EntryRef &operator *() { return *this; }
-        EntryRef *operator ->() { return this; }
+        ConstIterator operator ++(int) { return ConstIterator(pIndex++, pValue++); }
+        ConstIterator operator --(int) { return ConstIterator(pIndex--, pValue--); }
 
+        ConstIterator &operator +=(int n) {
+            pIndex += n; pValue += n;
+            return *this;
+        }
+
+        ConstIterator &operator -=(int n) {
+            pIndex -= n; pValue -= n;
+            return *this;
+        }
+
+        bool operator ==(const ConstIterator &other) const { return pIndex == other.pIndex; }
+        bool operator !=(const ConstIterator &other) const { return pIndex != other.pIndex; }
+
+        ConstIterator operator +(int n) const { return ConstIterator(pIndex + n, pValue + n); }
+        ConstIterator operator -(int n) const { return ConstIterator(pIndex - n, pValue - n); }
+
+        int operator -(const ConstIterator &other) { return pIndex - other.pIndex; }
+
+        bool operator <(const ConstIterator &other) { return pIndex < other.pIndex; }
+
+        ConstIterator operator[](int n) const { return ConstIterator(pIndex + n, pValue + n); }
+
+        Entry operator *() { return Entry(*pIndex,*pValue); }
+        Entry operator ->() { return Entry(*pIndex,*pValue); }
     };
+
+
 
     void test() {
         Iterator myIt = begin();
         Iterator myIt2 = end();
         if(myIt != myIt2) {
-            (*myIt).index() = 4;
+            (*myIt).index = 4;
         }
+
     }
 
     Iterator begin() { return Iterator(indices.data(), values.data()); }
     Iterator end() { return Iterator(indices.data()+indices.size(), NULL); }
+
+    ConstIterator cbegin() { return ConstIterator(indices.data(), values.data()); }
+    ConstIterator cend() { return ConstIterator(indices.data()+indices.size(), NULL); }
 
 protected:
     void swap(SparseVec &rvalue) {
@@ -238,5 +263,6 @@ protected:
 };
 
 std::ostream &operator <<(std::ostream &out, const SparseVec &sVector);
+
 
 #endif //GLPKTEST_SPARSEVEC_H

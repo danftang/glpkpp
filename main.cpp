@@ -11,12 +11,29 @@ int main() {
 
     SparseVec mVec;
 
-    mVec.add(2,2.2);
-    mVec.add(1,1.1);
-    mVec.add(3,3.3);
-    
-    mVec.sort();
+    for(int i=0; i<10; ++i) {
+        int r = rand()%100;
+        mVec.add(r, r + 0.5 );
+    }
 
+    auto it = mVec.begin();
+
+    auto v = *it;
+    std::cout << v.index << std::endl;
+    std::cout << *it << std::endl;
+    it++;
+    std::cout << v.index << std::endl;
+    std::cout << it->index << std::endl;
+    std::cout << *it << std::endl;
+
+    (*it).value += 0.01;
+    std::cout << *it << std::endl;
+//    mVec.add(4,4.2);
+//    mVec.add(2,2.2);
+//    mVec.add(1,1.2);
+//    mVec.add(3,3.2);
+
+    mVec.sort();
 
 //    Problem myProb;
 //
