@@ -3,10 +3,6 @@
 
 using namespace glp;
 
-void myFunc(SparseVec::EntryRef &rr) {
-
-}
-
 int main() {
 
     SparseVec mVec;
@@ -22,9 +18,9 @@ int main() {
     std::cout << v.index << std::endl;
     std::cout << *it << std::endl;
     it++;
-    std::cout << v.index << std::endl;
     std::cout << it->index << std::endl;
     std::cout << *it << std::endl;
+    std::cout << v << std::endl;
 
     (*it).value += 0.01;
     std::cout << *it << std::endl;

@@ -89,7 +89,7 @@ public:
     public:
         const int index;
         const double value;
-        Entry(int index, double value): index(index), value(value) { }
+        Entry(const int index, const double value): index(index), value(value) { }
         Entry *operator ->() { return this; }
 
         friend std::ostream &operator <<(std::ostream &out, const Entry &entry) {
@@ -143,109 +143,82 @@ public:
     };
 
 
+    template<typename DERIVED>
+    class IteratorBase {
+    protected:
+        int *pIndex;
+        double *pValue;
+    public:
+        typedef std::random_access_iterator_tag     iterator_category;
+        typedef  Entry                              value_type;
+        typedef  ptrdiff_t                          difference_type;
+
+
+        IteratorBase(int *indexPtr, double *valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
+
+        DERIVED &operator ++() {
+            ++pIndex; ++pValue;
+            return *(DERIVED *)this;
+        }
+
+        DERIVED &operator --() {
+            --pIndex; --pValue;
+            return *(DERIVED *)this;
+        }
+
+        DERIVED operator ++(int) { return DERIVED(pIndex++, pValue++); }
+        DERIVED operator --(int) { return DERIVED(pIndex--, pValue--); }
+
+        DERIVED &operator +=(int n) {
+            pIndex += n; pValue += n;
+            return *(DERIVED *)this;
+        }
+
+        DERIVED &operator -=(int n) {
+            pIndex -= n; pValue -= n;
+            return *(DERIVED *)this;
+        }
+
+        bool operator ==(const IteratorBase &other) const { return pIndex == other.pIndex; }
+        bool operator !=(const IteratorBase &other) const { return pIndex != other.pIndex; }
+
+        DERIVED operator +(int n) const { return DERIVED(pIndex + n, pValue + n); }
+        DERIVED operator -(int n) const { return DERIVED(pIndex - n, pValue - n); }
+        friend DERIVED operator +(int n, const DERIVED  &it) { return it + n; }
+        difference_type operator -(const IteratorBase &other) { return pIndex - other.pIndex; }
+
+        bool operator <(const IteratorBase &other) { return pIndex < other.pIndex; }
+        bool operator >(const IteratorBase &other) { return pIndex > other.pIndex; }
+        bool operator <=(const IteratorBase &other) { return pIndex <= other.pIndex; }
+        bool operator >=(const IteratorBase &other) { return pIndex >= other.pIndex; }
+    };
+
     // Iterator returns an EntryRef on deference. This is a proxy class for a reference to the
     // underlying value. Value type is Entry.
-    class Iterator: public std::iterator<std::random_access_iterator_tag, Entry, int, EntryRef, EntryRef> {
-        int *pIndex;
-        double *pValue;
+    class Iterator: public IteratorBase<Iterator> {
     public:
-        Iterator(int *indexPtr, double *valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
+        typedef EntryRef    pointer;
+        typedef EntryRef    reference;
+        Iterator(int *indexPtr, double *valuePtr): IteratorBase(indexPtr,valuePtr) { }
 
-        Iterator &operator ++() {
-            ++pIndex; ++pValue;
-            return *this;
-        }
-
-        Iterator &operator --() {
-            --pIndex; --pValue;
-            return *this;
-        }
-
-        Iterator operator ++(int) { return Iterator(pIndex++, pValue++); }
-        Iterator operator --(int) { return Iterator(pIndex--, pValue--); }
-
-        Iterator &operator +=(int n) {
-            pIndex += n; pValue += n;
-            return *this;
-        }
-
-        Iterator &operator -=(int n) {
-            pIndex -= n; pValue -= n;
-            return *this;
-        }
-
-        bool operator ==(const Iterator &other) const { return pIndex == other.pIndex; }
-        bool operator !=(const Iterator &other) const { return pIndex != other.pIndex; }
-
-        Iterator operator +(int n) const { return Iterator(pIndex + n, pValue + n); }
-        Iterator operator -(int n) const { return Iterator(pIndex - n, pValue - n); }
-
-        int operator -(const Iterator &other) { return pIndex - other.pIndex; }
-
-        bool operator <(const Iterator &other) { return pIndex < other.pIndex; }
-
-        Iterator operator[](int n) const { return Iterator(pIndex + n, pValue + n); }
-
-        EntryRef operator *() { return EntryRef(*pIndex,*pValue); }
-        EntryRef operator ->() { return EntryRef(*pIndex,*pValue); }
+        EntryRef operator[](int n) const { return EntryRef(*(pIndex + n), *(pValue + n)); }
+        EntryRef operator *() const { return EntryRef(*pIndex,*pValue); }
+        EntryRef operator ->() const { return EntryRef(*pIndex,*pValue); }
 
     };
 
-    class ConstIterator: public std::iterator<std::random_access_iterator_tag, Entry, int, Entry *, Entry &> {
-        int *pIndex;
-        double *pValue;
+    class ConstIterator: public IteratorBase<ConstIterator> {
     public:
-        ConstIterator(int *indexPtr, double *valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
+        typedef Entry *   pointer;
+        typedef Entry &   reference;
 
-        ConstIterator &operator ++() {
-            ++pIndex; ++pValue;
-            return *this;
-        }
+        ConstIterator(int *indexPtr, double *valuePtr): IteratorBase(indexPtr,valuePtr) { }
 
-        ConstIterator &operator --() {
-            --pIndex; --pValue;
-            return *this;
-        }
-
-        ConstIterator operator ++(int) { return ConstIterator(pIndex++, pValue++); }
-        ConstIterator operator --(int) { return ConstIterator(pIndex--, pValue--); }
-
-        ConstIterator &operator +=(int n) {
-            pIndex += n; pValue += n;
-            return *this;
-        }
-
-        ConstIterator &operator -=(int n) {
-            pIndex -= n; pValue -= n;
-            return *this;
-        }
-
-        bool operator ==(const ConstIterator &other) const { return pIndex == other.pIndex; }
-        bool operator !=(const ConstIterator &other) const { return pIndex != other.pIndex; }
-
-        ConstIterator operator +(int n) const { return ConstIterator(pIndex + n, pValue + n); }
-        ConstIterator operator -(int n) const { return ConstIterator(pIndex - n, pValue - n); }
-
-        int operator -(const ConstIterator &other) { return pIndex - other.pIndex; }
-
-        bool operator <(const ConstIterator &other) { return pIndex < other.pIndex; }
-
-        ConstIterator operator[](int n) const { return ConstIterator(pIndex + n, pValue + n); }
-
-        Entry operator *() { return Entry(*pIndex,*pValue); }
-        Entry operator ->() { return Entry(*pIndex,*pValue); }
+        Entry operator[](int n) const { return Entry(*(pIndex + n), *(pValue + n)); }
+        Entry operator *() const { return Entry(*pIndex,*pValue); }
+        Entry operator ->() const { return Entry(*pIndex,*pValue); }
     };
 
-
-
-    void test() {
-        Iterator myIt = begin();
-        Iterator myIt2 = end();
-        if(myIt != myIt2) {
-            (*myIt).index = 4;
-        }
-
-    }
 
     Iterator begin() { return Iterator(indices.data(), values.data()); }
     Iterator end() { return Iterator(indices.data()+indices.size(), NULL); }
