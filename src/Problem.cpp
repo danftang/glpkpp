@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <iomanip>
 #include "../include/glpkpp.h"
 
 namespace glp {
@@ -19,7 +20,7 @@ namespace glp {
     }
 
 
-    SparseVec Problem::getMatRow(int i) {
+    SparseVec Problem::getMatRow(int i) const {
         SparseVec rowVec(nVars());
         rowVec.resize(nVars());
         int newSize = glp_get_mat_row(lp, i, rowVec.glpkIndexArray(), rowVec.glpkValueArray());
@@ -27,7 +28,7 @@ namespace glp {
         return rowVec;
     }
 
-    SparseVec Problem::getMatCol(int j) {
+    SparseVec Problem::getMatCol(int j) const {
         SparseVec colVec(nConstraints());
         colVec.resize(nConstraints());
         int newSize = glp_get_mat_col(lp, j, colVec.glpkIndexArray(), colVec.glpkValueArray());
@@ -75,6 +76,26 @@ namespace glp {
         }
     }
 
+
+    SparseVec Problem::primalSolution() const {
+        SparseVec rowVec;
+        rowVec.reserve(nVars());
+        for(int j=1; j<nVars(); ++j) {
+            rowVec.add(j, glp_get_col_prim(lp, j));
+        }
+        return rowVec;
+    }
+
+    SparseVec Problem::mipSolution() const {
+        SparseVec rowVec;
+        rowVec.reserve(nVars());
+        for(int j=1; j<nVars(); ++j) {
+            rowVec.add(j, glp_mip_col_val(lp, j));
+        }
+        return rowVec;
+    }
+
+
     std::ostream &operator<<(std::ostream &out, Problem &prob) {
         out << "Problem has " << prob.nConstraints() << " constraints and " << prob.nVars() << " variables." << std::endl;
         switch (glp_get_obj_dir(prob.lp)) {
@@ -89,8 +110,15 @@ namespace glp {
         }
         out << prob.getObjective() << std::endl;
         out << "Subject to:" << std::endl;
+
+        std::vector<double> row(prob.nVars());
         for (int i = 1; i <= prob.nConstraints(); ++i) {
-            out << prob.getRowLb(i) << " <= " << prob.getMatRow(i) << " <= " << prob.getRowUb(i) << std::endl;
+            out << std::setw(13) << prob.getRowLb(i) << " <= ";
+            prob.getMatRow(i).toDense(row.data(), row.size());
+            for(int j=0; j < row.size(); ++j) {
+                out << std::setw(5) << row[j];
+            }
+            out << " <= " << prob.getRowUb(i) << std::endl;
         }
         for (int j = 1; j <= prob.nVars(); ++j) {
             out << prob.getColLb(j) << " <= x[" << j << "] <= " << prob.getColUb(j) << std::endl;

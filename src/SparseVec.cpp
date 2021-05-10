@@ -90,11 +90,14 @@ namespace glp {
 
 
     std::ostream &operator<<(std::ostream &out, const SparseVec &sVector) {
-        int i;
-        int iMax = sVector.maxNonZeroIndex();
-        double dense[iMax];
-        sVector.toDense(dense, iMax);
-        for (i = 0; i < iMax; ++i) out << std::setw(12) << dense[i] << "\t";
+//        int i;
+//        int iMax = sVector.maxNonZeroIndex();
+//        double dense[iMax];
+//        sVector.toDense(dense, iMax);
+//        for (i = 0; i < iMax; ++i) out << std::setw(12) << dense[i] << "\t";
+        for(auto entry: sVector) {
+            out << "[" << entry.index << "] -> " << entry.value << "  ";
+        }
         return out;
     }
 };

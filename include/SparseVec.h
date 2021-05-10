@@ -31,7 +31,8 @@ public:
     void clear();
 //    int capacity() const { return std::min(indices.capacity(),values.capacity()); }
 //    int dimension() const { return (int)values[0]; }
-    void resize(int size) { indices.resize(size); values.resize(size); }
+    void resize(size_t size) { indices.resize(size); values.resize(size); }
+    void reserve(size_t n) { indices.reserve(n); values.reserve(n);}
 
     int *glpkIndexArray() { return indices.data() - 1; }
     double *glpkValueArray() { return values.data() - 1; }
@@ -64,6 +65,14 @@ public:
         }
         return *this;
     }
+
+    SparseVec &operator -=(const SparseVec &other) {
+        for(int i=0; i < other.sparseSize(); ++i) {
+            add(other.indices[i], -other.values[i]);
+        }
+        return *this;
+    }
+
 
     friend SparseVec operator +(SparseVec lhs, const SparseVec &rhs) {
         lhs += rhs;
@@ -143,18 +152,18 @@ public:
     };
 
 
-    template<typename DERIVED>
+    template<typename DERIVED, typename INTPTR, typename DOUBLEPTR>
     class IteratorBase {
     protected:
-        int *pIndex;
-        double *pValue;
+        INTPTR      pIndex;
+        DOUBLEPTR   pValue;
     public:
         typedef std::random_access_iterator_tag     iterator_category;
         typedef  Entry                              value_type;
         typedef  ptrdiff_t                          difference_type;
 
 
-        IteratorBase(int *indexPtr, double *valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
+        IteratorBase(INTPTR indexPtr, DOUBLEPTR valuePtr): pIndex(indexPtr), pValue(valuePtr) { }
 
         DERIVED &operator ++() {
             ++pIndex; ++pValue;
@@ -195,7 +204,7 @@ public:
 
     // Iterator returns an EntryRef on deference. This is a proxy class for a reference to the
     // underlying value. Value type is Entry.
-    class Iterator: public IteratorBase<Iterator> {
+    class Iterator: public IteratorBase<Iterator, int *, double *> {
     public:
         typedef EntryRef    pointer;
         typedef EntryRef    reference;
@@ -207,24 +216,27 @@ public:
 
     };
 
-    class ConstIterator: public IteratorBase<ConstIterator> {
+    class ConstIterator: public IteratorBase<ConstIterator, const int *, const double *> {
     public:
         typedef Entry *   pointer;
         typedef Entry &   reference;
 
-        ConstIterator(int *indexPtr, double *valuePtr): IteratorBase(indexPtr,valuePtr) { }
+        ConstIterator(const int *indexPtr, const double *valuePtr): IteratorBase(indexPtr,valuePtr) { }
 
         Entry operator[](int n) const { return Entry(*(pIndex + n), *(pValue + n)); }
         Entry operator *() const { return Entry(*pIndex,*pValue); }
         Entry operator ->() const { return Entry(*pIndex,*pValue); }
     };
 
-
     Iterator begin() { return Iterator(indices.data(), values.data()); }
     Iterator end() { return Iterator(indices.data()+indices.size(), NULL); }
 
-    ConstIterator cbegin() { return ConstIterator(indices.data(), values.data()); }
-    ConstIterator cend() { return ConstIterator(indices.data()+indices.size(), NULL); }
+    ConstIterator begin() const { return cbegin(); }
+    ConstIterator end() const { return cend(); }
+
+
+    ConstIterator cbegin() const { return ConstIterator(indices.data(), values.data()); }
+    ConstIterator cend() const { return ConstIterator(indices.data()+indices.size(), NULL); }
 
 protected:
     void swap(SparseVec &rvalue) {

@@ -26,6 +26,12 @@ public:
         return *this;
     }
 
+    LinearSum &operator -=(const LinearSum &term) {
+        SparseVec::operator -=(term);
+        return *this;
+    }
+
+
     // copy semantics
     LinearSum &operator =(const LinearSum &lvalue) {
         SparseVec::operator=(lvalue);
@@ -42,6 +48,12 @@ public:
         lhs += rhs;
         return lhs; // should use move constructor (or elision?)
     }
+
+    friend LinearSum operator -(LinearSum lhs, const LinearSum &rhs) {
+        lhs -= rhs;
+        return lhs; // should use move constructor (or elision?)
+    }
+
 
     Constraint operator ==(double c) const ;
 
