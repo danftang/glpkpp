@@ -22,13 +22,13 @@ int main() {
     myProb.simplex();
     std::cout << "LP relaxation optimal:" << myProb.primalSolution() << std::endl;
 
-    myProb.intOpt();
-    std::cout << "Branch-and-cut optimal:" << myProb.mipSolution() << std::endl;
+//    myProb.intOpt();
+//    std::cout << "Branch-and-cut optimal:" << myProb.mipSolution() << std::endl;
 
 //    myProb.stdBasis();
 //    myProb.warmUp();
-//    glp::Simplex mySimplex(myProb);
-//    std::cout << mySimplex << std::endl;
+    glp::Simplex mySimplex(myProb);
+    std::cout << mySimplex << std::endl;
 //    mySimplex.pivot(3,3,true);
 //    std::cout << mySimplex << std::endl;
 
