@@ -3,7 +3,10 @@
 //
 
 #include <iomanip>
+#include <cassert>
 #include "../include/glpkpp.h"
+#include "../include/Simplex.h"
+
 
 extern "C" {
     #include "spxprob.h"
@@ -15,20 +18,32 @@ namespace glp {
         glp_prob *P = prob.lp;
         spx_init_lp(this, P, 1);
         spx_alloc_lp(this);
-        map = new int[1 + P->m + P->n];
-        spx_build_lp(this, P, 1, 1, map);
-        spx_build_basis(this, P, map);
+        pi.resize(n+1);
+        kProbTokSim.resize(prob.nVars() + prob.nConstraints() + 1);
+        kSimTokProb.resize(n+1);
+        lpSolution.resize(prob.nVars()+1);
+        spx_build_lp(this, P, 1, shift, kProbTokSim.data());
+        spx_build_basis(this, P, kProbTokSim.data());
         spx_eval_beta(this,b);
-        pi = new double[m + 1];
         pi[0] = 0.0;    // indicates not yet evaluated
-        // b[1] = std::numeric_limits<double>::quiet_NaN();
+        for(int kProb=1; kProb <= prob.nVars() + prob.nConstraints(); ++kProb) {
+            int kSim = kProbTokSim[kProb];
+            if(kSim > 0) {
+                kSimTokProb[kSim] = kProb;
+            } else if(kSim == 0) {
+                // deleted fixed variable
+                int j = kProb - prob.nConstraints();
+                lpSolution[j] = prob.getColUb(j);
+            } else {
+                assert(false); // don't support shifted bounds as yet (loss of information on shift).
+            }
+        }
+        lpSolutionIsValid(false);
     }
 
 
     Simplex::~Simplex() {
         spx_free_lp(this);
-        delete[] map;
-        delete[] pi;
     }
 
     std::vector<double> Simplex::tableauRow(int i) {
@@ -46,24 +61,74 @@ namespace glp {
     }
 
     double Simplex::reducedObjective(int j) {
-        if (pi[0] == 0.0) {
-            spx_eval_pi(this, pi);
-            pi[0] = 1.0;
+        if (!piIsValid()) {
+            spx_eval_pi(this, pi.data());
+            piIsValid(true);
         }
-        return spx_eval_dj(this, pi, j);
+        return spx_eval_dj(this, pi.data(), j);
     }
 
 // i,j is the pivot element, 1-based, (the j'th col of N replaces the i'th col of B)
-// TODO: Better to use k coords on j?
-// if leavingVarToUpperBound is true then the leaving var is set to its upper bound
-// pivotCol - if non-null should be set to the current ftran of the incoming column,
-// if null this will be calculated
-    void Simplex::pivot(int i, int j, bool leavingVarToUpperBound, const std::vector<double> &pivotCol) {
-        const int boundFlag = leavingVarToUpperBound ? 1 : 0;
-        spx_update_beta(this, b, i, boundFlag, j, pivotCol.data());
+// pivotCol - should be set to the current ftran of the incoming column,
+// if not present this will be calculated
+    void Simplex::pivot(int i, int j, const std::vector<double> &pivotCol) {
+        assert(pivotCol[i] != 0.0);
+        const int upperBoundFlag = (pivotCol[i] > 0.0) ^ isAtUpperBound(j);  // leaving variable goes to upper bound?;
+        spx_update_beta(this, b, i, upperBoundFlag, j, pivotCol.data());
         spx_update_invb(this, i, head[j + m]);
-        spx_change_basis(this, i, boundFlag, j);
-        pi[0] = 0.0;
+        spx_change_basis(this, i, upperBoundFlag, j);
+        piIsValid(false);
+        lpSolutionIsValid(false);
+    }
+
+    void Simplex::piIsValid(bool setValid) {
+        pi[0] = setValid;
+    }
+
+    bool Simplex::piIsValid() {
+        return pi[0];
+    }
+
+    Simplex::BoundType Simplex::boundType(int k) {
+        return BoundType((l[k] == -std::numeric_limits<double>::max()) + 2*(u[k] == std::numeric_limits<double>::max()));
+    }
+
+    // Synchronises the state of this simplex with the Problem object originally
+    // passed on conctruction
+    void Simplex::syncWith(Problem &prob) {
+        std::vector<int> daeh(n+1); // inverse of head[]
+        spx_store_basis(this, prob.lp, kProbTokSim.data(), daeh.data());
+        std::vector<double> d(n-m+1); // reduced objective
+        for(int j=1; j<=n-m; ++j) { d[j] = reducedObjective(j); }
+        spx_store_sol(this, prob.lp, shift, kProbTokSim.data(), daeh.data(), b, pi.data(), d.data());
+    }
+
+    const std::vector<double> &Simplex::X() {
+        if(!lpSolutionIsValid()) calculateLpSolution();
+        return lpSolution;
+    }
+
+    // assumes no free variables and m == original number of constraints
+    void Simplex::calculateLpSolution() {
+        int kProb,kSim;
+        for(int i=1; i<=m; ++i) {
+            kProb = kSimTokProb[head[i]];
+            if(kProb > m) {
+                lpSolution[kProb-m] = b[i];
+            }
+        }
+        for(int j=1; j <= n-m; ++j) {
+            kSim = head[m+j];
+            kProb = kSimTokProb[kSim];
+            if(kProb > m) {
+                if(isAtUpperBound(j)) {
+                    lpSolution[kProb-m] = u[kSim];
+                } else {
+                    lpSolution[kProb-m] = l[kSim];
+                }
+            }
+        }
+        lpSolutionIsValid(true);
     }
 
 
@@ -89,7 +154,7 @@ namespace glp {
         // cols on upper limits
         out << std::setw(24) << "\t";
         for (int j = 1; j <= nCols; ++j) {
-            out << std::setw(12) << (simplex.isAtLowerBound(j) ? "\t" : "--------") << "\t";
+            out << std::setw(12) << (simplex.isAtUpperBound(j) ? "--------":"\t") << "\t";
         }
         out << std::endl;
 

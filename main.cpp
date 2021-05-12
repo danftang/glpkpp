@@ -25,12 +25,12 @@ int main() {
 //    myProb.intOpt();
 //    std::cout << "Branch-and-cut optimal:" << myProb.mipSolution() << std::endl;
 
-//    myProb.stdBasis();
-//    myProb.warmUp();
+    myProb.stdBasis();
+    myProb.warmUp();
     glp::Simplex mySimplex(myProb);
     std::cout << mySimplex << std::endl;
-//    mySimplex.pivot(3,3,true);
-//    std::cout << mySimplex << std::endl;
+    mySimplex.pivot(1,3);
+    std::cout << mySimplex << std::endl;
 
     return 0;
 }

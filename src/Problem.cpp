@@ -10,6 +10,7 @@ namespace glp {
 
     SparseVec Problem::getObjective() {
         SparseVec obj;
+        obj.reserve(nVars());
         int nVars = glp_get_num_cols(lp);
         double c;
         for (int j = 1; j <= nVars; ++j) {
@@ -47,7 +48,7 @@ namespace glp {
                              );
         } else {
             int newRow = glp_add_rows(lp, 1);
-//            SparseVec sparseRow(nVars(), constraint.coefficients);
+//            SparseVec sparseRow(nNCols(), constraint.coefficients);
             ensureNVars(constraint.coefficients.maxNonZeroIndex());
             glp_set_mat_row(lp, newRow, constraint.coefficients.sparseSize(),
                             constraint.coefficients.glpkIndexArray(),
