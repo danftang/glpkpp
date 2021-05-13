@@ -16,13 +16,13 @@ namespace glp {
 
     Simplex::Simplex(const Problem &prob) {
         glp_prob *P = prob.lp;
-        spx_init_lp(this, P, 1);
+        spx_init_lp(this, P, excludeFixed);
         spx_alloc_lp(this);
         pi.resize(n+1);
         kProbTokSim.resize(prob.nVars() + prob.nConstraints() + 1);
         kSimTokProb.resize(n+1);
         lpSolution.resize(prob.nVars()+1);
-        spx_build_lp(this, P, 1, shift, kProbTokSim.data());
+        spx_build_lp(this, P, excludeFixed, shift, kProbTokSim.data());
         spx_build_basis(this, P, kProbTokSim.data());
         spx_eval_beta(this,b);
         pi[0] = 0.0;    // indicates not yet evaluated
@@ -33,7 +33,7 @@ namespace glp {
             } else if(kSim == 0) {
                 // deleted fixed variable
                 int j = kProb - prob.nConstraints();
-                lpSolution[j] = prob.getColUb(j);
+                if(j>0) lpSolution[j] = prob.getColUb(j);
             } else {
                 assert(false); // don't support shifted bounds as yet (loss of information on shift).
             }
@@ -73,6 +73,8 @@ namespace glp {
 // if not present this will be calculated
     void Simplex::pivot(int i, int j, const std::vector<double> &pivotCol) {
         assert(pivotCol[i] != 0.0);
+        assert(u[head[i]] != l[head[i]]);
+        assert(u[head[m+j]] != l[head[m+j]]);
         const int upperBoundFlag = (pivotCol[i] > 0.0) ^ isAtUpperBound(j);  // leaving variable goes to upper bound?;
         spx_update_beta(this, b, i, upperBoundFlag, j, pivotCol.data());
         spx_update_invb(this, i, head[j + m]);
@@ -130,6 +132,8 @@ namespace glp {
         }
         lpSolutionIsValid(true);
     }
+
+
 
 
     std::ostream &operator<<(std::ostream &out, Simplex &simplex) {

@@ -12,7 +12,8 @@
 // k - variable (column) identifier (1..n)
 class Simplex: public SPXLP {
 public:
-    static constexpr int shift = 0; // don't shift bounds to zero. Don't change this!
+    static constexpr int excludeFixed = 1;  // exclude non-basic fixed variables
+    static constexpr int shift = 0;         // don't shift bounds to zero. Don't change this!
 
     enum BoundType {
         UNBOUNDED = 0,
