@@ -37,7 +37,7 @@ public:
     std::vector<double> tableauCol(int j);
     double reducedObjective(int j);             // value of the j'th (1 <= j <= n-m) element of the reduced objective
     void pivot(int i, int j, const std::vector<double> &pivotCol);
-    void pivot(int i, int j)                    { pivot(i,j,tableauCol(j)); }
+    void pivot(int i, int j)                    { if(i>0) pivot(i,j,tableauCol(j)); else pivot(i,j,std::vector<double>()); }
     bool isAtUpperBound(int j)                  { return flag[j]; }
     void isAtUpperBound(int j, bool setUpper)   { flag[j] = setUpper; }
     BoundType boundType(int k);

@@ -73,6 +73,17 @@ public:
         return *this;
     }
 
+    double operator *(const std::vector<double> &other) const {
+        double dotProd = 0.0;
+        for(int i=0; i < sparseSize(); ++i) {
+            dotProd += values[i] * other[indices[i]];
+        }
+        return dotProd;
+    }
+
+    friend double operator *(const std::vector<double> &lhs, const SparseVec &rhs) {
+        return rhs * lhs;
+    }
 
     friend SparseVec operator +(SparseVec lhs, const SparseVec &rhs) {
         lhs += rhs;

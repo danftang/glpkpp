@@ -29,8 +29,21 @@ int main() {
     myProb.warmUp();
     glp::Simplex mySimplex(myProb);
     std::cout << mySimplex << std::endl;
-    mySimplex.pivot(1,3);
+
+    for(int i=1; i<mySimplex.X().size(); ++i) {
+        std::cout << mySimplex.X()[i] << std::endl;
+    }
+    std::cout << "Valid = " << myProb.isValidSolution(mySimplex.X()) << std::endl;
+
+
+    mySimplex.pivot(3,3);
+
     std::cout << mySimplex << std::endl;
+
+    for(int i=1; i<mySimplex.X().size(); ++i) {
+        std::cout << mySimplex.X()[i] << std::endl;
+    }
+    std::cout << "Valid = " << myProb.isValidSolution(mySimplex.X()) << std::endl;
 
     return 0;
 }

@@ -64,13 +64,15 @@ public:
     void warmUp()   { glp_warm_up(lp); }
 
     // LP stuff
-    void simplex(const glp_smcp *parm=NULL) { glp_simplex(lp, parm); }
+    void simplex(const glp_smcp *parm=NULL) { glp_simplex(lp, parm); } // LP-solve
     SparseVec primalSolution() const;
 
     // MIP stuff
     void intOpt(const glp_iocp *parm=NULL) { glp_intopt(lp,parm); }
     void setColKind(int col, VariableKind varKind) { glp_set_col_kind(lp, col, varKind); }
     SparseVec mipSolution() const;
+
+    bool isValidSolution(const std::vector<double> &X);
 
 protected:
 

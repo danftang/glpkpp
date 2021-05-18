@@ -25,6 +25,7 @@ namespace glp {
         spx_build_lp(this, P, excludeFixed, shift, kProbTokSim.data());
         spx_build_basis(this, P, kProbTokSim.data());
         spx_eval_beta(this,b);
+        assert(m == prob.nConstraints()); // TODO: weaken this constraint (needed for conversion back to original space)
         pi[0] = 0.0;    // indicates not yet evaluated
         for(int kProb=1; kProb <= prob.nVars() + prob.nConstraints(); ++kProb) {
             int kSim = kProbTokSim[kProb];
@@ -71,14 +72,24 @@ namespace glp {
 // i,j is the pivot element, 1-based, (the j'th col of N replaces the i'th col of B)
 // pivotCol - should be set to the current ftran of the incoming column,
 // if not present this will be calculated
+// if i<1 then column j goes to its opposite bound and does not enter the basis
+// assumes there are no fixed variables in the tableau.
     void Simplex::pivot(int i, int j, const std::vector<double> &pivotCol) {
-        assert(pivotCol[i] != 0.0);
-        assert(u[head[i]] != l[head[i]]);
-        assert(u[head[m+j]] != l[head[m+j]]);
-        const int upperBoundFlag = (pivotCol[i] > 0.0) ^ isAtUpperBound(j);  // leaving variable goes to upper bound?;
-        spx_update_beta(this, b, i, upperBoundFlag, j, pivotCol.data());
-        spx_update_invb(this, i, head[j + m]);
-        spx_change_basis(this, i, upperBoundFlag, j);
+        if(i < 1) { // column j goes to opposite bound
+            std::cout << "Pivoting to opposite bound" << std::endl;
+            spx_update_beta(this,b,-1,0,j,pivotCol.data());
+            bool currentBound = isAtUpperBound(j);
+            isAtUpperBound(j,!currentBound);
+        } else {
+            assert(pivotCol[i] != 0.0);
+            assert(u[head[i]] != l[head[i]]);       // TODO: deal with fixed variables leaving the basis
+            assert(u[head[m + j]] != l[head[m + j]]);   // fixed variables should never enter the basis
+            const int upperBoundFlag =
+                    (pivotCol[i] > 0.0) ^isAtUpperBound(j);  // leaving variable goes to upper bound?;
+            spx_update_beta(this, b, i, upperBoundFlag, j, pivotCol.data());
+            spx_update_invb(this, i, head[j + m]);
+            spx_change_basis(this, i, upperBoundFlag, j);
+        }
         piIsValid(false);
         lpSolutionIsValid(false);
     }

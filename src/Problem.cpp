@@ -5,6 +5,8 @@
 #include <iostream>
 #include <iomanip>
 #include "../include/glpkpp.h"
+#include "../include/Problem.h"
+
 
 namespace glp {
 
@@ -94,6 +96,21 @@ namespace glp {
             rowVec.add(j, glp_mip_col_val(lp, j));
         }
         return rowVec;
+    }
+
+    bool Problem::isValidSolution(const std::vector<double> &X) {
+        double y;
+        int i;
+        for(i=1; i<X.size(); ++i) {
+            y = X[i];
+            if(y < getColLb(i) || y > getColUb(i)) return false;
+        }
+        for(i=1; i<=nConstraints(); ++i) {
+            y = getMatRow(i) * X;
+            if(y < getRowLb(i) || y > getRowUb(i)) return false;
+
+        }
+        return true;
     }
 
 
