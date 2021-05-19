@@ -10,14 +10,11 @@
 
 namespace glp {
 
-    SparseVec Problem::getObjective() {
-        SparseVec obj;
+    LinearSum Problem::getObjective() const {
+        LinearSum obj;
         obj.reserve(nVars());
-        int nVars = glp_get_num_cols(lp);
-        double c;
-        for (int j = 1; j <= nVars; ++j) {
-            c = glp_get_obj_coef(lp, j);
-            if (c != 0.0) obj.add(j, c);
+        for (int j = 1; j < nVars(); ++j) {
+            obj.add(j,glp_get_obj_coef(lp, j));
         }
         return obj;
     }
@@ -73,7 +70,7 @@ namespace glp {
                );
     }
 
-    void Problem::setObjective(const LinearSum &sum) {
+    void Problem::setObjective(const SparseVec &sum) {
         for(int i=0; i<sum.sparseSize(); ++i) {
             glp_set_obj_coef(lp, sum.indices[i], sum.values[i]);
         }
@@ -111,6 +108,22 @@ namespace glp {
 
         }
         return true;
+    }
+
+
+    // find a basis that has the given solution
+    void Problem::solutionBasis(const std::vector<double> &solution) {
+        SparseVec originalObjective = getObjective();
+        ObjectiveDirection originalDirection = getObjDir();
+        SparseVec solutionObjective;
+        solutionObjective.reserve(nVars());
+        for(int j=1; j<solution.size(); ++j) {
+            if(solution[j] == getColLb(j)) solutionObjective.add(j, 1.0);
+        }
+        setObjDir(MINIMISE);
+        simplex();
+        setObjDir(originalDirection);
+        setObjective(originalObjective);
     }
 
 

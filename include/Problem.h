@@ -46,9 +46,10 @@ public:
     void addConstraint(const Constraint &constraint);
 
     // Objective stuff
-    void setObjective(const LinearSum &);
-    SparseVec getObjective();
+    void setObjective(const SparseVec &);
+    LinearSum getObjective() const;
     void setObjDir(ObjectiveDirection direction) { glp_set_obj_dir(lp, direction); }
+    ObjectiveDirection getObjDir() { return ObjectiveDirection(glp_get_obj_dir(lp)); }
 
     // glpk interface
     SparseVec getMatRow(int i) const;
@@ -61,6 +62,7 @@ public:
     void stdBasis() { glp_std_basis(lp); }
     void advBasis() { glp_adv_basis(lp, 0); }
     void cpxBasis() { glp_cpx_basis(lp); }
+    void solutionBasis(const std::vector<double> &);
     void warmUp()   { glp_warm_up(lp); }
 
     // LP stuff
