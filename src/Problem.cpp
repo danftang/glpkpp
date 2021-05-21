@@ -96,15 +96,16 @@ namespace glp {
     }
 
     bool Problem::isValidSolution(const std::vector<double> &X) {
+        const double tol = 1e-8;
         double y;
         int i;
         for(i=1; i<X.size(); ++i) {
             y = X[i];
-            if(y < getColLb(i) || y > getColUb(i)) return false;
+            if(getColLb(i)-y > tol || y-getColUb(i) > tol) return false;
         }
         for(i=1; i<=nConstraints(); ++i) {
             y = getMatRow(i) * X;
-            if(y < getRowLb(i) || y > getRowUb(i)) return false;
+            if(getRowLb(i)-y > tol || y-getRowUb(i) > tol) return false;
 
         }
         return true;
@@ -112,15 +113,22 @@ namespace glp {
 
 
     // find a basis that has the given solution
+    // TODO: Make this into reduced basis with auxiliary variables which are on their bounds
     void Problem::solutionBasis(const std::vector<double> &solution) {
         SparseVec originalObjective = getObjective();
         ObjectiveDirection originalDirection = getObjDir();
         SparseVec solutionObjective;
         solutionObjective.reserve(nVars());
         for(int j=1; j<solution.size(); ++j) {
-            if(solution[j] == getColLb(j)) solutionObjective.add(j, 1.0);
+            if(solution[j] == getColLb(j)) {
+                solutionObjective.add(j, 1.0);
+            } else if(solution[j] == getColUb(j)) {
+                solutionObjective.add(j, -1.0);
+            }
         }
         setObjDir(MINIMISE);
+        setObjective(solutionObjective);
+        advBasis();
         simplex();
         setObjDir(originalDirection);
         setObjective(originalObjective);

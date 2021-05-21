@@ -87,8 +87,15 @@ namespace glp {
             const int upperBoundFlag =
                     (pivotCol[i] > 0.0) ^isAtUpperBound(j);  // leaving variable goes to upper bound?;
             spx_update_beta(this, b, i, upperBoundFlag, j, pivotCol.data());
-            spx_update_invb(this, i, head[j + m]);
+            int err = spx_update_invb(this, i, head[j + m]);
             spx_change_basis(this, i, upperBoundFlag, j);
+            if(err == BFD_ELIMIT) {
+                // need to do a refactorization
+                int facErr = spx_factorize(this);
+                assert(facErr == 0);
+            } else {
+                assert(err == 0);
+            }
         }
         piIsValid(false);
         lpSolutionIsValid(false);

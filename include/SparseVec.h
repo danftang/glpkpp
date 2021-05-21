@@ -21,6 +21,15 @@ public:
     SparseVec(const SparseVec &lvalue): indices(lvalue.indices), values(lvalue.values) { // copy semantics
     }
 
+    SparseVec(const std::vector<double> &dense) {
+        for(int i=0; i < dense.size(); ++i) {
+            if(double v = dense[i]; v != 0.0) {
+                indices.push_back(i);
+                values.push_back(v);
+            }
+        }
+    }
+
 //    double operator [](int i) const;
 //    double &operator [](int i);
 
