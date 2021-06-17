@@ -14,7 +14,7 @@ extern "C" {
 
 namespace glp {
 
-    Simplex::Simplex(const Problem &prob) {
+    Simplex::Simplex(Problem &prob): originalProblem(prob) {
         glp_prob *P = prob.lp;
         spx_init_lp(this, P, excludeFixed);
         spx_alloc_lp(this);
@@ -62,10 +62,7 @@ namespace glp {
     }
 
     double Simplex::reducedObjective(int j) {
-        if (!piIsValid()) {
-            spx_eval_pi(this, pi.data());
-            piIsValid(true);
-        }
+        if (!piIsValid()) recalculatePi();
         return spx_eval_dj(this, pi.data(), j);
     }
 
@@ -76,19 +73,28 @@ namespace glp {
 // assumes there are no fixed variables in the tableau.
     void Simplex::pivot(int i, int j, const std::vector<double> &pivotCol) {
         if(i < 1) { // column j goes to opposite bound
-            std::cout << "Pivoting to opposite bound" << std::endl;
-            spx_update_beta(this,b,-1,0,j,pivotCol.data());
-            bool currentBound = isAtUpperBound(j);
-            isAtUpperBound(j,!currentBound);
+            pivot(i,j,pivotCol, !isAtUpperBound(j));
+        } else {
+            const int upperBoundFlag = (pivotCol[i] > 0.0) ^isAtUpperBound(j); // leaving variable goes to upper bound?
+            pivot(i, j, pivotCol, upperBoundFlag);
+        }
+    }
+
+
+    void Simplex::pivot(int i, int j, const std::vector<double> &pivotCol, bool leavingVarToUpperBound) {
+        if(i < 1) { // column j goes to opposite bound
+            if(isAtUpperBound(j) != leavingVarToUpperBound) {
+                std::cout << "Pivoting to opposite bound" << std::endl;
+                spx_update_beta(this, b, -1, 0, j, pivotCol.data());
+                isAtUpperBound(j, leavingVarToUpperBound);
+            }
         } else {
             assert(pivotCol[i] != 0.0);
             assert(u[head[i]] != l[head[i]]);       // TODO: deal with fixed variables leaving the basis
             assert(u[head[m + j]] != l[head[m + j]]);   // fixed variables should never enter the basis
-            const int upperBoundFlag =
-                    (pivotCol[i] > 0.0) ^isAtUpperBound(j);  // leaving variable goes to upper bound?;
-            spx_update_beta(this, b, i, upperBoundFlag, j, pivotCol.data());
+            spx_update_beta(this, b, i, leavingVarToUpperBound, j, pivotCol.data());
             int err = spx_update_invb(this, i, head[j + m]);
-            spx_change_basis(this, i, upperBoundFlag, j);
+            spx_change_basis(this, i, leavingVarToUpperBound, j);
             if(err == BFD_ELIMIT) {
                 // need to do a refactorization
                 int facErr = spx_factorize(this);
@@ -100,6 +106,7 @@ namespace glp {
         piIsValid(false);
         lpSolutionIsValid(false);
     }
+
 
     void Simplex::piIsValid(bool setValid) {
         pi[0] = setValid;
@@ -151,7 +158,19 @@ namespace glp {
         lpSolutionIsValid(true);
     }
 
+    std::vector<double> Simplex::reducedObjective() {
+        std::vector<double> reducedObjective(nNonBasic() + 1);
+        if (!piIsValid()) recalculatePi();
+        for(int j=1; j<=nNonBasic(); ++j) {
+            reducedObjective[j] = spx_eval_dj(this, pi.data(), j);
+        }
+        return reducedObjective;
+    }
 
+    void Simplex::recalculatePi() {
+        spx_eval_pi(this, pi.data());
+        piIsValid(true);
+    }
 
 
     std::ostream &operator<<(std::ostream &out, Simplex &simplex) {

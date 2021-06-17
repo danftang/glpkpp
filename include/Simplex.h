@@ -22,20 +22,27 @@ public:
         DOUBLEBOUNDED = 3
     };
 
-    std::vector<int>    kProbTokSim;    // map from variable ids of the original problem to variable ids in this simplex
+    std::vector<int>    kProbTokSim;    // map from variable ids of the original problem to variable ids in this simplex (0 means removed from Sim)
     std::vector<int>            kSimTokProb;    // map from variable ids in this simplex to variable ids of the original problem
     std::vector<double>         pi;     // pi = c_B*B' where c_B = objective of basic vars so reduced objective = c_B*B'*N + c_N = pi*N + c_N
     std::vector<double>         lpSolution;     // solution in the original variables (excluding auxiliary vars)
+    Problem &                   originalProblem;
 
-    Simplex(const Problem &prob);
+    Simplex(Problem &prob);
     ~Simplex();
 
-    int nRows() { return this->m; }
-    int nNCols() { return this->n; }
+    int nBasic() const { return this->m; }
+    int nNonBasic() const { return this->n - this->m; }
+    int nVars() const { return this->n; }
 
     std::vector<double> tableauRow(int i);
     std::vector<double> tableauCol(int j);
+
+    void recalculatePi();
+    std::vector<double> reducedObjective();
     double reducedObjective(int j);             // value of the j'th (1 <= j <= n-m) element of the reduced objective
+
+    void pivot(int i, int j, const std::vector<double> &pivotCol, bool leavingVarToUpperBound);
     void pivot(int i, int j, const std::vector<double> &pivotCol);
     void pivot(int i, int j)                    { if(i>0) pivot(i,j,tableauCol(j)); else pivot(i,j,std::vector<double>()); }
     bool isAtUpperBound(int j)                  { return flag[j]; }
@@ -43,6 +50,8 @@ public:
     BoundType boundType(int k);
     void syncWith(Problem &prob);
     const std::vector<double> &X(); // current solution in original problem coordinates (excluding auxiliaries)
+    void btran(std::vector<double> &rowVec) { if(!valid) spx_factorize(this); bfd_btran(bfd, rowVec.data()); } // in-place btran
+    void ftran(std::vector<double> &colVec) { if(!valid) spx_factorize(this); bfd_ftran(bfd, colVec.data()); } // in-place ftran
 
 protected:
 

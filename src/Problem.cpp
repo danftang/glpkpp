@@ -112,8 +112,9 @@ namespace glp {
     }
 
 
-    // find a basis that has the given solution
-    // TODO: Make this into reduced basis with auxiliary variables which are on their bounds
+    // find a basis that has the structural variables given in "solution" by setting the objective
+    // function to 1.0 for each structural on its lower bound and -1.0 for each structural
+    // on its upper bound and minimising.
     void Problem::solutionBasis(const std::vector<double> &solution) {
         SparseVec originalObjective = getObjective();
         ObjectiveDirection originalDirection = getObjDir();
