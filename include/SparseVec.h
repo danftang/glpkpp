@@ -7,21 +7,21 @@
 
 class SparseVec {
 public:
-    std::vector<int> indices;   // one-based array of indices of non-zero elements (zero'th element stores number of non-zeros)
-    std::vector<double> values; // one-based array of values of non-zero elements (zero'th element stores dimension of this vector)
+    std::vector<int> indices{};   // one-based array of indices of non-zero elements (zero'th element stores number of non-zeros)
+    std::vector<double> values{}; // one-based array of values of non-zero elements (zero'th element stores dimension of this vector)
 
     SparseVec() { }
 
-    SparseVec(int sparseSize): indices(sparseSize), values(sparseSize) { }
+    explicit SparseVec(int sparseSize): indices(sparseSize), values(sparseSize) { }
 
-    SparseVec(SparseVec &&rvalue) { // move semantics
+    SparseVec(SparseVec &&rvalue) noexcept { // move semantics
         swap(rvalue);
     }
 
     SparseVec(const SparseVec &lvalue): indices(lvalue.indices), values(lvalue.values) { // copy semantics
     }
 
-    SparseVec(const std::vector<double> &dense) {
+    explicit SparseVec(const std::vector<double> &dense): indices(), values() {
         for(int i=0; i < dense.size(); ++i) {
             if(double v = dense[i]; v != 0.0) {
                 indices.push_back(i);
@@ -35,7 +35,7 @@ public:
 
     int sparseSize() const { return indices.size(); }
 
-    void toDense(double *denseVec, int size) const;
+    std::vector<double> toDense() const;
     void add(int i, double v);
     void clear();
 //    int capacity() const { return std::min(indices.capacity(),values.capacity()); }

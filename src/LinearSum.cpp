@@ -21,13 +21,10 @@ namespace glp {
 
 
     std::ostream &operator<<(std::ostream &out, const LinearSum &sVector) {
-        int i;
-        int iMax = sVector.maxNonZeroIndex();
-        double dense[iMax];
-        sVector.toDense(dense, iMax);
-        for (i = 0; i < iMax; ++i) {
-            out << std::setw(8) << dense[i] << "X" << i+1;
-            if(i == iMax-1) out << "\t"; else out << " +\t";
+        std::vector<double> dense = sVector.toDense();
+        for (int i = 0; i < dense.size(); ++i) {
+            out << std::setw(8) << dense[i] << "X" << i;
+            if(i == dense.size()-1) out << "\t"; else out << " +\t";
         }
         return out;
     }

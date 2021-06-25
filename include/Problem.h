@@ -23,6 +23,15 @@ public:
         BINARY = GLP_BV
     };
 
+    enum SolutionStatus {
+        OPT = GLP_OPT,
+        FEAS = GLP_FEAS,
+        INFEAS = GLP_INFEAS,
+        NOFEAS = GLP_NOFEAS,
+        UNBND = GLP_UNBND,
+        UNDEF = GLP_UNDEF
+    };
+
     Problem() {
         lp = glp_create_prob();
         setObjDir(MINIMISE);
@@ -59,6 +68,7 @@ public:
     double getRowUb(int i) const { return glp_get_row_ub(lp, i); }
     double getColLb(int j) const { return glp_get_col_lb(lp, j); }
     double getColUb(int j) const { return glp_get_col_ub(lp, j); }
+    SolutionStatus getStatus() { return SolutionStatus(glp_get_status(lp)); }
     void stdBasis() { glp_std_basis(lp); }
     void advBasis() { glp_adv_basis(lp, 0); }
     void cpxBasis() { glp_cpx_basis(lp); }
@@ -67,7 +77,7 @@ public:
 
     // LP stuff
     void simplex(const glp_smcp *parm=NULL) { glp_simplex(lp, parm); } // LP-solve
-    SparseVec primalSolution() const;
+    std::vector<double> primalSolution() const;
 
     // MIP stuff
     void intOpt(const glp_iocp *parm=NULL) { glp_intopt(lp,parm); }

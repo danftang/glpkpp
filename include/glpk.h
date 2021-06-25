@@ -124,8 +124,8 @@ typedef struct
 #if 1 /* 16/III-2016 */
 #define GLP_RT_FLIP     0x33  /* long-step (flip-flop) ratio test */
 #endif
-      double tol_bnd;         /* primal feasibility tolerance */
-      double tol_dj;          /* dual feasibility tolerance */
+      double tol_bnd;         /* primal infeasibility tolerance */
+      double tol_dj;          /* dual infeasibility tolerance */
       double tol_piv;         /* pivot tolerance */
       double obj_ll;          /* lower objective limit */
       double obj_ul;          /* upper objective limit */
@@ -192,7 +192,7 @@ typedef struct
       int clq_cuts;           /* clique cuts    (GLP_ON/GLP_OFF) */
       int presolve;           /* enable/disable using MIP presolver */
       int binarize;           /* try to binarize integer variables */
-      int fp_heur;            /* feasibility pump heuristic */
+      int fp_heur;            /* infeasibility pump heuristic */
       int ps_heur;            /* proximity search heuristic */
       int ps_tm_lim;          /* proxy time limit, milliseconds */
       int sr_heur;            /* simple rounding heuristic */
@@ -574,7 +574,7 @@ double glp_mip_col_val(glp_prob *P, int j);
 
 void glp_check_kkt(glp_prob *P, int sol, int cond, double *ae_max,
       int *ae_ind, double *re_max, int *re_ind);
-/* check feasibility/optimality conditions */
+/* check infeasibility/optimality conditions */
 
 int glp_print_sol(glp_prob *P, const char *fname);
 /* write basic solution in printable format */
@@ -869,7 +869,7 @@ int glp_minisat1(glp_prob *P);
 /* solve CNF-SAT problem with MiniSat solver */
 
 int glp_intfeas1(glp_prob *P, int use_bound, int obj_bound);
-/* solve integer feasibility problem */
+/* solve integer infeasibility problem */
 
 int glp_init_env(void);
 /* initialize GLPK environment */

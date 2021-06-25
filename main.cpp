@@ -20,7 +20,8 @@ int main() {
     std::cout << myProb;
 
     myProb.simplex();
-    std::cout << "LP relaxation optimal:" << myProb.primalSolution() << std::endl;
+    std::cout << "Optimality status = " << (myProb.getStatus() == Problem::SolutionStatus::OPT) << std::endl;
+    std::cout << "LP relaxation optimal:" << SparseVec(myProb.primalSolution()) << std::endl;
 
 //    myProb.intOpt();
 //    std::cout << "Branch-and-cut optimal:" << myProb.mipSolution() << std::endl;

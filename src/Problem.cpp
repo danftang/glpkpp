@@ -12,8 +12,8 @@ namespace glp {
 
     LinearSum Problem::getObjective() const {
         LinearSum obj;
-        obj.reserve(nVars());
-        for (int j = 1; j < nVars(); ++j) {
+        obj.reserve(nVars()+1);
+        for (int j = 1; j <= nVars(); ++j) {
             obj.add(j,glp_get_obj_coef(lp, j));
         }
         return obj;
@@ -71,25 +71,27 @@ namespace glp {
     }
 
     void Problem::setObjective(const SparseVec &sum) {
+        for(int j=1; j<=nVars(); ++j) {
+            glp_set_obj_coef(lp, j, 0.0);
+        }
         for(int i=0; i<sum.sparseSize(); ++i) {
             glp_set_obj_coef(lp, sum.indices[i], sum.values[i]);
         }
     }
 
 
-    SparseVec Problem::primalSolution() const {
-        SparseVec rowVec;
-        rowVec.reserve(nVars());
+    std::vector<double> Problem::primalSolution() const {
+        std::vector<double> solution(nVars()+1);
         for(int j=1; j<nVars(); ++j) {
-            rowVec.add(j, glp_get_col_prim(lp, j));
+            solution[j] = glp_get_col_prim(lp, j);
         }
-        return rowVec;
+        return solution;
     }
 
     SparseVec Problem::mipSolution() const {
         SparseVec rowVec;
-        rowVec.reserve(nVars());
-        for(int j=1; j<nVars(); ++j) {
+        rowVec.reserve(nVars()+1);
+        for(int j=1; j<=nVars(); ++j) {
             rowVec.add(j, glp_mip_col_val(lp, j));
         }
         return rowVec;
@@ -151,11 +153,11 @@ namespace glp {
         out << prob.getObjective() << std::endl;
         out << "Subject to:" << std::endl;
 
-        std::vector<double> row(prob.nVars());
+//        std::vector<double> row(prob.nVars()+1);
         for (int i = 1; i <= prob.nConstraints(); ++i) {
             out << std::setw(13) << prob.getRowLb(i) << " <= ";
-            prob.getMatRow(i).toDense(row.data(), row.size());
-            for(int j=0; j < row.size(); ++j) {
+            std::vector<double> row = prob.getMatRow(i).toDense();
+            for(int j=1; j < row.size(); ++j) {
                 out << std::setw(5) << row[j];
             }
             out << " <= " << prob.getRowUb(i) << std::endl;

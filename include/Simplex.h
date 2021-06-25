@@ -39,6 +39,7 @@ public:
     std::vector<double> tableauCol(int j);
 
     void recalculatePi();
+    void setObjective(const SparseVec &objective);
     std::vector<double> reducedObjective();
     double reducedObjective(int j);             // value of the j'th (1 <= j <= n-m) element of the reduced objective
 

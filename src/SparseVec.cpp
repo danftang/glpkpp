@@ -59,14 +59,13 @@ namespace glp {
     }
 
     // to zero-based dense array
-    void SparseVec::toDense(double *dense, int size) const {
-        int i;
-        for (i = 0; i < size; ++i) { dense[i] = 0.0; }
-        for (i = 0; i < sparseSize(); ++i) {
-            if (indices[i] > size || indices[i] < 1)
-                std::cout << "Out of range index[" << i << "] = " << indices[i] << " -> " << values[i] << std::endl;
-            dense[indices[i] - 1] = values[i];
+    std::vector<double> SparseVec::toDense() const {
+        int vecSize = maxNonZeroIndex() + 1;
+        std::vector<double> denseVec(vecSize,0.0);
+        for (int i = 0; i < sparseSize(); ++i) {
+            denseVec[indices[i]] = values[i];
         }
+        return denseVec;
     }
 
 

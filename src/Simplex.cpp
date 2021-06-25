@@ -84,7 +84,7 @@ namespace glp {
     void Simplex::pivot(int i, int j, const std::vector<double> &pivotCol, bool leavingVarToUpperBound) {
         if(i < 1) { // column j goes to opposite bound
             if(isAtUpperBound(j) != leavingVarToUpperBound) {
-                std::cout << "Pivoting to opposite bound" << std::endl;
+//                std::cout << "Pivoting to opposite bound" << std::endl;
                 spx_update_beta(this, b, -1, 0, j, pivotCol.data());
                 isAtUpperBound(j, leavingVarToUpperBound);
             }
@@ -135,23 +135,24 @@ namespace glp {
         return lpSolution;
     }
 
-    // assumes no free variables and m == original number of constraints
+
     void Simplex::calculateLpSolution() {
         int kProb,kSim;
+        int nConstraints = originalProblem.nConstraints();
         for(int i=1; i<=m; ++i) {
             kProb = kSimTokProb[head[i]];
-            if(kProb > m) {
-                lpSolution[kProb-m] = b[i];
+            if(kProb > nConstraints) {
+                lpSolution[kProb-nConstraints] = b[i];
             }
         }
         for(int j=1; j <= n-m; ++j) {
             kSim = head[m+j];
             kProb = kSimTokProb[kSim];
-            if(kProb > m) {
+            if(kProb > nConstraints) {
                 if(isAtUpperBound(j)) {
-                    lpSolution[kProb-m] = u[kSim];
+                    lpSolution[kProb-nConstraints] = u[kSim];
                 } else {
-                    lpSolution[kProb-m] = l[kSim];
+                    lpSolution[kProb-nConstraints] = l[kSim];
                 }
             }
         }
@@ -170,6 +171,16 @@ namespace glp {
     void Simplex::recalculatePi() {
         spx_eval_pi(this, pi.data());
         piIsValid(true);
+    }
+
+
+    void Simplex::setObjective(const SparseVec &objective) {
+        for(int k=0; k <= nVars(); ++k) {
+            c[k] = 0.0;
+        }
+        for(int l=0; l<objective.sparseSize(); ++l) {
+            c[objective.indices[l]] = objective.values[l];
+        }
     }
 
 
