@@ -18,7 +18,7 @@ namespace glp {
         glp_prob *P = prob.lp;
         spx_init_lp(this, P, excludeFixed);
         spx_alloc_lp(this);
-        pi.resize(n+1);
+        pi.resize(nBasic()+1);
         kProbTokSim.resize(prob.nVars() + prob.nConstraints() + 1);
         kSimTokProb.resize(n+1);
         lpSolution.resize(prob.nVars()+1);
@@ -61,7 +61,7 @@ namespace glp {
         return denseCol;
     }
 
-    double Simplex::reducedObjective(int j) {
+    double Simplex::reducedCost(int j) {
         if (!piIsValid()) recalculatePi();
         return spx_eval_dj(this, pi.data(), j);
     }
@@ -126,7 +126,7 @@ namespace glp {
         std::vector<int> daeh(n+1); // inverse of head[]
         spx_store_basis(this, prob.lp, kProbTokSim.data(), daeh.data());
         std::vector<double> d(n-m+1); // reduced objective
-        for(int j=1; j<=n-m; ++j) { d[j] = reducedObjective(j); }
+        for(int j=1; j<=n-m; ++j) { d[j] = reducedCost(j); }
         spx_store_sol(this, prob.lp, shift, kProbTokSim.data(), daeh.data(), b, pi.data(), d.data());
     }
 
@@ -159,7 +159,7 @@ namespace glp {
         lpSolutionIsValid(true);
     }
 
-    std::vector<double> Simplex::reducedObjective() {
+    std::vector<double> Simplex::reducedCost() {
         std::vector<double> reducedObjective(nNonBasic() + 1);
         if (!piIsValid()) recalculatePi();
         for(int j=1; j<=nNonBasic(); ++j) {
@@ -223,7 +223,7 @@ namespace glp {
         // reduced objective
         out << std::endl << std::setw(24) << "\t";
         for (int j = 1; j <= nCols; ++j) {
-            out << std::setw(12) << simplex.reducedObjective(j) << "\t";
+            out << std::setw(12) << simplex.reducedCost(j) << "\t";
         }
         out << std::endl;
 

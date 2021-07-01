@@ -40,8 +40,8 @@ public:
 
     void recalculatePi();
     void setObjective(const SparseVec &objective);
-    std::vector<double> reducedObjective();
-    double reducedObjective(int j);             // value of the j'th (1 <= j <= n-m) element of the reduced objective
+    std::vector<double> reducedCost();
+    double reducedCost(int j);             // value of the j'th (1 <= j <= n-m) element of the reduced objective
 
     void pivot(int i, int j, const std::vector<double> &pivotCol, bool leavingVarToUpperBound);
     void pivot(int i, int j, const std::vector<double> &pivotCol);
