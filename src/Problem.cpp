@@ -98,17 +98,14 @@ namespace glp {
     }
 
     bool Problem::isValidSolution(const std::vector<double> &X) {
-        const double tol = 1e-8;
-        double y;
-        int i;
-        for(i=1; i<X.size(); ++i) {
-            y = X[i];
-            if(getColLb(i)-y > tol || y-getColUb(i) > tol) return false;
+        constexpr double tol = 1e-8;
+        for(int j=1; j < X.size(); ++j) {
+            double Xj = X[j];
+            if(getColLb(j) - Xj > tol || Xj - getColUb(j) > tol) return false;
         }
-        for(i=1; i<=nConstraints(); ++i) {
-            y = getMatRow(i) * X;
-            if(getRowLb(i)-y > tol || y-getRowUb(i) > tol) return false;
-
+        for(int i=1; i<=nConstraints(); ++i) {
+            double Bi = getMatRow(i) * X;
+            if(getRowLb(i) - Bi > tol || Bi - getRowUb(i) > tol) return false;
         }
         return true;
     }

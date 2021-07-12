@@ -1,0 +1,6 @@
+/home/daniel/my/deselby-research/glpkpp/CMakeFiles/rebuild_cache.dir
+/home/daniel/my/deselby-research/glpkpp/CMakeFiles/edit_cache.dir
+/home/daniel/my/deselby-research/glpkpp/CMakeFiles/glpktest.dir
+/home/daniel/my/deselby-research/glpkpp/src/CMakeFiles/edit_cache.dir
+/home/daniel/my/deselby-research/glpkpp/src/CMakeFiles/rebuild_cache.dir
+/home/daniel/my/deselby-research/glpkpp/src/CMakeFiles/glpkpp.dir

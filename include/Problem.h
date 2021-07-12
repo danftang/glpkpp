@@ -84,7 +84,7 @@ public:
     void setColKind(int col, VariableKind varKind) { glp_set_col_kind(lp, col, varKind); }
     SparseVec mipSolution() const;
 
-    bool isValidSolution(const std::vector<double> &X);
+    bool isValidSolution(const std::vector<double> &X); // X in 1..nVars() i.e. only structural vars
 
 protected:
 

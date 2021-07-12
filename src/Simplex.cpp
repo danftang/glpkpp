@@ -16,6 +16,7 @@ namespace glp {
 
     Simplex::Simplex(Problem &prob): originalProblem(prob) {
         glp_prob *P = prob.lp;
+        beta = new double[prob.nConstraints()];
         spx_init_lp(this, P, excludeFixed);
         spx_alloc_lp(this);
         pi.resize(nBasic()+1);
@@ -24,7 +25,7 @@ namespace glp {
         lpSolution.resize(prob.nVars()+1);
         spx_build_lp(this, P, excludeFixed, shift, kProbTokSim.data());
         spx_build_basis(this, P, kProbTokSim.data());
-        spx_eval_beta(this,b);
+        spx_eval_beta(this, beta);
         assert(m == prob.nConstraints()); // TODO: weaken this constraint (needed for conversion back to original space)
         pi[0] = 0.0;    // indicates not yet evaluated
         for(int kProb=1; kProb <= prob.nVars() + prob.nConstraints(); ++kProb) {
@@ -45,6 +46,7 @@ namespace glp {
 
     Simplex::~Simplex() {
         spx_free_lp(this);
+        delete [] beta;
     }
 
     std::vector<double> Simplex::tableauRow(int i) {
@@ -85,25 +87,29 @@ namespace glp {
         if(i < 1) { // column j goes to opposite bound
             if(isAtUpperBound(j) != leavingVarToUpperBound) {
 //                std::cout << "Pivoting to opposite bound" << std::endl;
-                spx_update_beta(this, b, -1, 0, j, pivotCol.data());
+                spx_update_beta(this, beta, -1, 0, j, pivotCol.data());
                 isAtUpperBound(j, leavingVarToUpperBound);
             }
-        } else {
-            assert(pivotCol[i] != 0.0);
+        } else { // basis update
+            assert(fabs(pivotCol[i]) > zeroTol);
             assert(u[head[i]] != l[head[i]]);       // TODO: deal with fixed variables leaving the basis
             assert(u[head[m + j]] != l[head[m + j]]);   // fixed variables should never enter the basis
-            spx_update_beta(this, b, i, leavingVarToUpperBound, j, pivotCol.data());
+            spx_update_beta(this, beta, i, leavingVarToUpperBound, j, pivotCol.data());
             int err = spx_update_invb(this, i, head[j + m]);
             spx_change_basis(this, i, leavingVarToUpperBound, j);
-            if(err == BFD_ELIMIT) {
-                // need to do a refactorization
-                int facErr = spx_factorize(this);
-                assert(facErr == 0);
-            } else {
-                assert(err == 0);
+            if(err != 0) {
+                if (err == BFD_ELIMIT) {
+                    // need to do a refactorization
+                    int facErr = spx_factorize(this);
+                    assert(facErr == 0);
+                    spx_eval_beta(this, beta);
+                } else {
+                    std::cout << "Unhandled error while pivoting: " << err << std::endl;
+                    assert(false);
+                }
             }
+            piIsValid(false);
         }
-        piIsValid(false);
         lpSolutionIsValid(false);
     }
 
@@ -122,12 +128,12 @@ namespace glp {
 
     // Synchronises the state of this simplex with the Problem object originally
     // passed on conctruction
-    void Simplex::syncWith(Problem &prob) {
+    void Simplex::syncWithLP() {
         std::vector<int> daeh(n+1); // inverse of head[]
-        spx_store_basis(this, prob.lp, kProbTokSim.data(), daeh.data());
+        spx_store_basis(this, originalProblem.lp, kProbTokSim.data(), daeh.data());
         std::vector<double> d(n-m+1); // reduced objective
         for(int j=1; j<=n-m; ++j) { d[j] = reducedCost(j); }
-        spx_store_sol(this, prob.lp, shift, kProbTokSim.data(), daeh.data(), b, pi.data(), d.data());
+        spx_store_sol(this, originalProblem.lp, shift, kProbTokSim.data(), daeh.data(), beta, pi.data(), d.data());
     }
 
     const std::vector<double> &Simplex::X() {
@@ -142,7 +148,7 @@ namespace glp {
         for(int i=1; i<=m; ++i) {
             kProb = kSimTokProb[head[i]];
             if(kProb > nConstraints) {
-                lpSolution[kProb-nConstraints] = b[i];
+                lpSolution[kProb-nConstraints] = beta[i];
             }
         }
         for(int j=1; j <= n-m; ++j) {

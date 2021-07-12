@@ -7,5 +7,5 @@ file(GLOB GLPK_SOURCES
         glpk/*/*.c)
 
 
-add_library(glpkpp SHARED ${GLPK_SOURCES}  ../include/glpkpp.h Problem.cpp SparseVec.cpp Simplex.cpp Constraint.cpp LinearSum.cpp)
+add_library(glpkpp SHARED ${GLPK_SOURCES}  ../include/glpkpp.h Problem.cpp SparseVec.cpp Simplex.cpp Constraint.cpp LinearSum.cpp FVSVector.cpp ../include/FVSVector.h)
 

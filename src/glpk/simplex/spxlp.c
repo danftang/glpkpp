@@ -633,7 +633,7 @@ void spx_update_beta_s(SPXLP *lp, double beta[/*1+m*/], int p,
 *  It is assumed that the array trow contains elements of p-th (pivot)
 *  row T'[p] of the simplex table in locations trow[1], ..., trow[n-m].
 *  It is also assumed that the array tcol contains elements of q-th
-*  (pivot) column T[q] of the simple table in locations tcol[1], ...,
+*  (pivot) column T[q] of the simplex table in locations tcol[1], ...,
 *  tcol[m]. (These row and column should be computed for the current
 *  basis.)
 *
@@ -662,7 +662,7 @@ void spx_update_beta_s(SPXLP *lp, double beta[/*1+m*/], int p,
 *  from column T[q] as more accurate). Reduced costs of other non-basic
 *  variables xN[j] for 1 <= j <= n-m, j != q, are updated as follows:
 *
-*     new d[j] = d[j] + T[p,j] * new d[q].
+*     new d[j] = d[j] - T[p,j] * new d[q].
 *
 *  On exit the routine stores updated components of the vector d to the
 *  same locations, where the input vector d was stored. */

@@ -5,7 +5,7 @@
 #ifndef GLPKPP_X_H
 #define GLPKPP_X_H
 
-// Represents a variable
+// Represents the id'th variable in a LinearSum
 class X {
 public:
     int id;

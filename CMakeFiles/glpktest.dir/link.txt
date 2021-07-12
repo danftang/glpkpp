@@ -1,0 +1,1 @@
+/usr/bin/clang++-11 -g CMakeFiles/glpktest.dir/main.cpp.o -o glpktest  -Wl,-rpath,/home/daniel/my/deselby-research/glpkpp/src src/libglpkpp.so 
