@@ -47,6 +47,7 @@ public:
     std::vector<double> reducedCost();
     double reducedCost(int j);             // value of the j'th (1 <= j <= n-m) element of the reduced objective
 
+    std::vector<double> piTimesMinusN(const std::vector<double> &pi);
     void pivot(int i, int j, const std::vector<double> &pivotCol, bool leavingVarToUpperBound);
     void pivot(int i, int j, const std::vector<double> &pivotCol);
     void pivot(int i, int j)                    { if(i>0) pivot(i,j,tableauCol(j)); else pivot(i,j,std::vector<double>()); }
@@ -54,7 +55,10 @@ public:
     void isAtUpperBound(int j, bool setUpper)   { flag[j] = setUpper; }
     BoundType boundType(int k);
     void syncWithLP();
+
     const std::vector<double> &X(); // current solution in original problem coordinates (excluding auxiliaries)
+    double nonBasicValue(int j) { return isAtUpperBound(j)?u[head[nBasic()+j]]:l[head[nBasic()+j]]; }
+
     void btran(std::vector<double> &rowVec) { if(!valid) spx_factorize(this); bfd_btran(bfd, rowVec.data()); } // in-place btran
     void ftran(std::vector<double> &colVec) { if(!valid) spx_factorize(this); bfd_ftran(bfd, colVec.data()); } // in-place ftran
 

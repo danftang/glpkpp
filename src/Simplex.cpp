@@ -189,6 +189,22 @@ namespace glp {
         }
     }
 
+    std::vector<double> Simplex::piTimesMinusN(const std::vector<double> &pi) {
+        std::vector<double> d(nNonBasic()+1, 0.0); // = pi*N
+        int k, ptr, end;
+        for(int j=1; j<=nNonBasic(); ++j) {
+            k = head[m + j]; /* x[k] = xN[j] */
+            /* dj := c[k] */
+            /* dj := dj - A'[k] * pi */
+            ptr = A_ptr[k];
+            end = A_ptr[k + 1];
+            for (; ptr < end; ptr++)
+                d[j] -= A_val[ptr] * pi[A_ind[ptr]];
+        }
+        return d;
+    }
+
+
 
     std::ostream &operator<<(std::ostream &out, Simplex &simplex) {
         const int nCols = simplex.n - simplex.m;
