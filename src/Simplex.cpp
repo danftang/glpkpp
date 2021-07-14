@@ -16,7 +16,7 @@ namespace glp {
 
     Simplex::Simplex(Problem &prob): originalProblem(prob) {
         glp_prob *P = prob.lp;
-        beta = new double[prob.nConstraints()];
+        beta = new double[prob.nConstraints()+1];
         spx_init_lp(this, P, excludeFixed);
         spx_alloc_lp(this);
         pi.resize(nBasic()+1);
