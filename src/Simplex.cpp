@@ -118,7 +118,7 @@ namespace glp {
         pi[0] = setValid;
     }
 
-    bool Simplex::piIsValid() {
+    bool Simplex::piIsValid() const {
         return pi[0];
     }
 

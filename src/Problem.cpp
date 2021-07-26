@@ -20,17 +20,15 @@ namespace glp {
     }
 
 
-    SparseVec Problem::getMatRow(int i) const {
-        SparseVec rowVec(nVars());
-        rowVec.resize(nVars());
+    LinearSum Problem::getMatRow(int i) const {
+        LinearSum rowVec(nVars());
         int newSize = glp_get_mat_row(lp, i, rowVec.glpkIndexArray(), rowVec.glpkValueArray());
         rowVec.resize(newSize);
         return rowVec;
     }
 
-    SparseVec Problem::getMatCol(int j) const {
-        SparseVec colVec(nConstraints());
-        colVec.resize(nConstraints());
+    LinearSum Problem::getMatCol(int j) const {
+        LinearSum colVec(nConstraints());
         int newSize = glp_get_mat_col(lp, j, colVec.glpkIndexArray(), colVec.glpkValueArray());
         colVec.resize(newSize);
         return colVec;
@@ -54,6 +52,10 @@ namespace glp {
                             constraint.coefficients.glpkValueArray());
             glp_set_row_bnds(lp, newRow, constraint.glpBoundType(), constraint.lowerBound, constraint.upperBound);
         }
+    }
+
+    Constraint Problem::getConstraint(int i) const {
+        return Constraint(getRowLb(i), getMatRow(i), getRowUb(i));
     }
 
     void Problem::ensureNVars(int n) {

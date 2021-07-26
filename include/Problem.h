@@ -52,7 +52,9 @@ public:
 
     void ensureNVars(int n); // ensures that there are at least n columns in the problem matrix
 
+    // constraint stuff
     void addConstraint(const Constraint &constraint);
+    Constraint getConstraint(int i) const;
 
     // Objective stuff
     void setObjective(const SparseVec &);
@@ -61,8 +63,8 @@ public:
     ObjectiveDirection getObjDir() { return ObjectiveDirection(glp_get_obj_dir(lp)); }
 
     // glpk interface
-    SparseVec getMatRow(int i) const;
-    SparseVec getMatCol(int j) const;
+    LinearSum getMatRow(int i) const;
+    LinearSum getMatCol(int j) const;
     int addRows(int n) { return glp_add_rows(lp, n); }
     double getRowLb(int i) const { return glp_get_row_lb(lp, i); }
     double getRowUb(int i) const { return glp_get_row_ub(lp, i); }

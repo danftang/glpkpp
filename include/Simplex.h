@@ -51,7 +51,7 @@ public:
     void pivot(int i, int j, const std::vector<double> &pivotCol, bool leavingVarToUpperBound);
     void pivot(int i, int j, const std::vector<double> &pivotCol);
     void pivot(int i, int j)                    { if(i>0) pivot(i,j,tableauCol(j)); else pivot(i,j,std::vector<double>()); }
-    bool isAtUpperBound(int j)                  { return flag[j]; }
+    bool isAtUpperBound(int j) const            { return flag[j]; }
     void isAtUpperBound(int j, bool setUpper)   { flag[j] = setUpper; }
     BoundType boundType(int k);
     void syncWithLP();
@@ -64,11 +64,11 @@ public:
 
 protected:
 
-    bool lpSolutionIsValid()                { return lpSolution[0] == 0; }
+    bool lpSolutionIsValid() const          { return lpSolution[0] == 0; }
     void lpSolutionIsValid(bool setValid)   { lpSolution[0] = !setValid; }
     void calculateLpSolution();
     void piIsValid(bool setValid);
-    bool piIsValid();
+    bool piIsValid() const;
 };
 
 std::ostream &operator <<(std::ostream &out, Simplex &simplex);

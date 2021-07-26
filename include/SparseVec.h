@@ -7,8 +7,8 @@
 
 class SparseVec {
 public:
-    std::vector<int> indices{};   // one-based array of indices of non-zero elements (zero'th element stores number of non-zeros)
-    std::vector<double> values{}; // one-based array of values of non-zero elements (zero'th element stores dimension of this vector)
+    std::vector<int> indices{};   // array of indices of non-zero elements
+    std::vector<double> values{}; // array of values of non-zero elements
 
     SparseVec() { }
 

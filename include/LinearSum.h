@@ -13,7 +13,7 @@ class LinearSum: public SparseVec {
 public:
     LinearSum() { }
 
-//    explicit LinearSum(int sparseSize): SparseVec(sparseSize) { }
+    explicit LinearSum(int sparseSize): SparseVec(sparseSize) { }
 
     LinearSum(LinearSum &&rvalue) {
         swap(rvalue);
