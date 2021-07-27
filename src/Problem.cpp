@@ -99,7 +99,7 @@ namespace glp {
         return rowVec;
     }
 
-    bool Problem::isValidSolution(const std::vector<double> &X) {
+    bool Problem::isValidSolution(const std::vector<double> &X) const {
         constexpr double tol = 1e-8;
         for(int j=1; j < X.size(); ++j) {
             double Xj = X[j];
@@ -137,7 +137,7 @@ namespace glp {
     }
 
 
-    std::ostream &operator<<(std::ostream &out, Problem &prob) {
+    std::ostream &operator<<(std::ostream &out, const Problem &prob) {
         out << "Problem has " << prob.nConstraints() << " constraints and " << prob.nVars() << " variables." << std::endl;
         switch (glp_get_obj_dir(prob.lp)) {
             case GLP_MIN:

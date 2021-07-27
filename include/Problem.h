@@ -60,7 +60,7 @@ public:
     void setObjective(const SparseVec &);
     LinearSum getObjective() const;
     void setObjDir(ObjectiveDirection direction) { glp_set_obj_dir(lp, direction); }
-    ObjectiveDirection getObjDir() { return ObjectiveDirection(glp_get_obj_dir(lp)); }
+    ObjectiveDirection getObjDir() const { return ObjectiveDirection(glp_get_obj_dir(lp)); }
 
     // glpk interface
     LinearSum getMatRow(int i) const;
@@ -70,7 +70,7 @@ public:
     double getRowUb(int i) const { return glp_get_row_ub(lp, i); }
     double getColLb(int j) const { return glp_get_col_lb(lp, j); }
     double getColUb(int j) const { return glp_get_col_ub(lp, j); }
-    SolutionStatus getStatus() { return SolutionStatus(glp_get_status(lp)); }
+    SolutionStatus getStatus() const { return SolutionStatus(glp_get_status(lp)); }
     void stdBasis() { glp_std_basis(lp); }
     void advBasis() { glp_adv_basis(lp, 0); }
     void cpxBasis() { glp_cpx_basis(lp); }
@@ -86,7 +86,8 @@ public:
     void setColKind(int col, VariableKind varKind) { glp_set_col_kind(lp, col, varKind); }
     SparseVec mipSolution() const;
 
-    bool isValidSolution(const std::vector<double> &X); // X in 1..nVars() i.e. only structural vars
+    // Solution stuff
+    bool isValidSolution(const std::vector<double> &X) const; // X in 1..nVars() i.e. only structural vars
 
 protected:
 
@@ -94,6 +95,6 @@ protected:
 
 };
 
-std::ostream &operator <<(std::ostream &out, Problem &prob);
+std::ostream &operator <<(std::ostream &out, const Problem &prob);
 
 #endif //GLPKTEST_GLPPROBLEM_H
