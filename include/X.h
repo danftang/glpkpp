@@ -9,7 +9,7 @@
 class X {
 public:
     int id;
-    X(int id) { this->id = id; }
+    X(int id): id(id) { }
 
     operator int() const { return id; }
 };

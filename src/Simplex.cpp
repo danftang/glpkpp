@@ -209,6 +209,7 @@ namespace glp {
     std::ostream &operator<<(std::ostream &out, Simplex &simplex) {
         const int nCols = simplex.n - simplex.m;
 
+
         out << std::setprecision(5);
 
         // column labels
@@ -216,10 +217,10 @@ namespace glp {
         for (int j = 1; j <= nCols; ++j) {
             out << std::setw(12) << "x" << simplex.head[j + simplex.m] << "\t";
         }
-        out << std::setw(12) << "B" << std::endl;
+        out << std::setw(12) << "Beta" << std::endl;
 
         // col upper limits
-        out << std::setw(24) << "\t";
+        out << std::setw(22) << "Upper bound = \t";
         for (int j = 1; j <= nCols; ++j) {
             out << std::setw(12) << simplex.u[simplex.head[j + simplex.m]] << "\t";
         }
@@ -239,20 +240,26 @@ namespace glp {
             for (int j = 1; j <= nCols; ++j) {
                 out << std::setw(12) << row[j] << "\t";
             }
-            out << std::setw(12) << simplex.b[i] << " <= " << simplex.u[simplex.head[i]] << std::endl;
+            out << std::setw(12) << simplex.beta[i] << " <= " << simplex.u[simplex.head[i]] << std::endl;
         }
 
         // reduced objective
-        out << std::endl << std::setw(24) << "\t";
+        out << std::endl << std::setw(22) << "z = \t";
         for (int j = 1; j <= nCols; ++j) {
             out << std::setw(12) << simplex.reducedCost(j) << "\t";
         }
         out << std::endl;
 
         // col lower limits
-        out << std::endl << std::setw(24) << "\t";
+        out << std::endl << std::setw(22) << "Lower bound = \t";
         for (int j = 1; j <= nCols; ++j) {
             out << std::setw(12) << simplex.l[simplex.head[j + simplex.m]] << "\t";
+        }
+        out << std::endl;
+        // cols on lower limits
+        out << std::setw(24) << "\t";
+        for (int j = 1; j <= nCols; ++j) {
+            out << std::setw(12) << (simplex.isAtUpperBound(j) ? "\t":"--------") << "\t";
         }
         out << std::endl;
 

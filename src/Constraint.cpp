@@ -17,7 +17,7 @@ namespace glp {
 
 
     Constraint &Constraint::operator<=(double upperBound) {
-        this->upperBound = upperBound;
+        if(upperBound < this->upperBound) this->upperBound = upperBound;
         return *this;
     }
 
@@ -27,7 +27,7 @@ namespace glp {
     lowerBound(lowerBound) { }
 
 
-    Constraint::Constraint(double lowerBound, const LinearSum &sum, double upperBound):
+    Constraint::Constraint(double lowerBound, const SparseVec &sum, double upperBound):
     coefficients(sum),
     upperBound(upperBound),
     lowerBound(lowerBound) { }

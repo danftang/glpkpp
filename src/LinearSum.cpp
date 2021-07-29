@@ -8,23 +8,27 @@
 
 namespace glp {
     Constraint LinearSum::operator ==(double c) const {
-        return Constraint(c, *this, c);
+        return Constraint(c, toSparseVec(), c);
     }
 
     Constraint LinearSum::operator<=(double c) const {
-        return Constraint(-std::numeric_limits<double>::infinity(), *this, c);
+        return Constraint(-std::numeric_limits<double>::infinity(), toSparseVec(), c);
     }
 
     Constraint LinearSum::operator>=(double c) const {;
-        return Constraint(c, *this, std::numeric_limits<double>::infinity());
+        return Constraint(c, toSparseVec(), std::numeric_limits<double>::infinity());
+    }
+
+    Constraint operator<=(double c, const LinearSum &linExp) {
+        return linExp >= c;
     }
 
 
-    std::ostream &operator<<(std::ostream &out, const LinearSum &sVector) {
-        std::vector<double> dense = sVector.toDense();
-        for (int i = 0; i < dense.size(); ++i) {
-            out << std::setw(8) << dense[i] << "X" << i;
-            if(i == dense.size()-1) out << "\t"; else out << " +\t";
+    std::ostream &operator <<(std::ostream &out, const LinearSum &sum) {
+        bool first = true;
+        for (auto [varId, coeff] : sum.coefficients) {
+            if(first) first = false; else out << " +\t";
+            out << std::setw(8) << coeff << "X" << varId;
         }
         return out;
     }

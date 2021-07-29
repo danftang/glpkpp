@@ -7,8 +7,8 @@
 
 class SparseVec {
 public:
-    std::vector<int> indices{};   // array of indices of non-zero elements
-    std::vector<double> values{}; // array of values of non-zero elements
+    std::vector<int> indices;   // array of indices of non-zero elements
+    std::vector<double> values; // array of values of non-zero elements
 
     SparseVec() { }
 
@@ -36,7 +36,8 @@ public:
     int sparseSize() const { return indices.size(); }
 
     std::vector<double> toDense() const;
-    void add(int i, double v);
+    std::vector<double> toDense(int dimension) const;
+    void insert(int i, double v);
     void clear();
 //    int capacity() const { return std::min(indices.capacity(),values.capacity()); }
 //    int dimension() const { return (int)values[0]; }
@@ -68,19 +69,6 @@ public:
         return 0.0;
     }
 
-    SparseVec &operator +=(const SparseVec &other) {
-        for(int i=0; i < other.sparseSize(); ++i) {
-            add(other.indices[i], other.values[i]);
-        }
-        return *this;
-    }
-
-    SparseVec &operator -=(const SparseVec &other) {
-        for(int i=0; i < other.sparseSize(); ++i) {
-            add(other.indices[i], -other.values[i]);
-        }
-        return *this;
-    }
 
     double operator *(const std::vector<double> &other) const {
         double dotProd = 0.0;
@@ -93,13 +81,6 @@ public:
     friend double operator *(const std::vector<double> &lhs, const SparseVec &rhs) {
         return rhs * lhs;
     }
-
-    friend SparseVec operator +(SparseVec lhs, const SparseVec &rhs) {
-        lhs += rhs;
-        return lhs; // should use move constructor (or elision?)
-    }
-
-
 
     // copy semantics
     SparseVec &operator =(const SparseVec &lvalue) {

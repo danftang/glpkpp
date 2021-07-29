@@ -10,25 +10,25 @@
 
 namespace glp {
 
-    LinearSum Problem::getObjective() const {
-        LinearSum obj;
+    SparseVec Problem::getObjective() const {
+        SparseVec obj;
         obj.reserve(nVars()+1);
         for (int j = 1; j <= nVars(); ++j) {
-            obj.add(j,glp_get_obj_coef(lp, j));
+            obj.insert(j, glp_get_obj_coef(lp, j));
         }
         return obj;
     }
 
 
-    LinearSum Problem::getMatRow(int i) const {
-        LinearSum rowVec(nVars());
+    SparseVec Problem::getMatRow(int i) const {
+        SparseVec rowVec(nVars());
         int newSize = glp_get_mat_row(lp, i, rowVec.glpkIndexArray(), rowVec.glpkValueArray());
         rowVec.resize(newSize);
         return rowVec;
     }
 
-    LinearSum Problem::getMatCol(int j) const {
-        LinearSum colVec(nConstraints());
+    SparseVec Problem::getMatCol(int j) const {
+        SparseVec colVec(nConstraints());
         int newSize = glp_get_mat_col(lp, j, colVec.glpkIndexArray(), colVec.glpkValueArray());
         colVec.resize(newSize);
         return colVec;
@@ -54,8 +54,21 @@ namespace glp {
         }
     }
 
+    void Problem::addConstraints(const std::vector<Constraint> &constraints) {
+        for(const Constraint &constraint: constraints) addConstraint(constraint);
+    }
+
     Constraint Problem::getConstraint(int i) const {
         return Constraint(getRowLb(i), getMatRow(i), getRowUb(i));
+    }
+
+    std::vector<Constraint> Problem::getConstraints() const {
+        std::vector<Constraint> constraints;
+        constraints.reserve(nConstraints());
+        for(int c=1; c<=nConstraints(); ++c) {
+            constraints.emplace_back(getRowLb(c), getMatRow(c), getRowUb(c));
+        }
+        return constraints;
     }
 
     void Problem::ensureNVars(int n) {
@@ -94,7 +107,7 @@ namespace glp {
         SparseVec rowVec;
         rowVec.reserve(nVars()+1);
         for(int j=1; j<=nVars(); ++j) {
-            rowVec.add(j, glp_mip_col_val(lp, j));
+            rowVec.insert(j, glp_mip_col_val(lp, j));
         }
         return rowVec;
     }
@@ -123,9 +136,9 @@ namespace glp {
         solutionObjective.reserve(nVars());
         for(int j=1; j<solution.size(); ++j) {
             if(solution[j] == getColLb(j)) {
-                solutionObjective.add(j, 1.0);
+                solutionObjective.insert(j, 1.0);
             } else if(solution[j] == getColUb(j)) {
-                solutionObjective.add(j, -1.0);
+                solutionObjective.insert(j, -1.0);
             }
         }
         setObjDir(MINIMISE);
@@ -155,7 +168,7 @@ namespace glp {
 //        std::vector<double> row(prob.nVars()+1);
         for (int i = 1; i <= prob.nConstraints(); ++i) {
             out << std::setw(13) << prob.getRowLb(i) << " <= ";
-            std::vector<double> row = prob.getMatRow(i).toDense();
+            std::vector<double> row = prob.getMatRow(i).toDense(prob.nVars()+1);
             for(int j=1; j < row.size(); ++j) {
                 out << std::setw(5) << row[j];
             }

@@ -9,14 +9,14 @@
 class Constraint {
 public:
 
-    LinearSum coefficients;
+    SparseVec coefficients;
     double upperBound;
     double lowerBound;
 
     Constraint(): Constraint(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()) {}
     Constraint(double lowerBound, double upperBound);
-    Constraint(double lowerBound, const LinearSum &sumCoefficients, double upperBound);
-    Constraint(const LinearSum &sum): Constraint(-std::numeric_limits<double>::infinity(), sum, std::numeric_limits<double>::infinity()) {}
+    Constraint(double lowerBound, const SparseVec &coefficients, double upperBound);
+//    Constraint(const LinearSum &sum): Constraint(-std::numeric_limits<double>::infinity(), sum, std::numeric_limits<double>::infinity()) {}
 
     Constraint & operator <=(double upperBound);
 
@@ -32,9 +32,6 @@ public:
 
 };
 
-inline Constraint operator<=(double c, const LinearSum &linExp) {
-    return linExp >= c;
-}
 
 std::ostream &operator <<(std::ostream &out, const Constraint &constraint);
 

@@ -46,7 +46,7 @@ namespace glp {
 
     // Adds element,
     // doesn't delete if index already exists
-    void SparseVec::add(int i, double v) {
+    void SparseVec::insert(int i, double v) {
         if (v != 0.0) {
             indices.push_back(i);
             values.push_back(v);
@@ -62,6 +62,14 @@ namespace glp {
     std::vector<double> SparseVec::toDense() const {
         int vecSize = maxNonZeroIndex() + 1;
         std::vector<double> denseVec(vecSize,0.0);
+        for (int i = 0; i < sparseSize(); ++i) {
+            denseVec[indices[i]] = values[i];
+        }
+        return denseVec;
+    }
+
+    std::vector<double> SparseVec::toDense(int dimension) const {
+        std::vector<double> denseVec(dimension,0.0);
         for (int i = 0; i < sparseSize(); ++i) {
             denseVec[indices[i]] = values[i];
         }

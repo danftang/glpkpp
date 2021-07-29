@@ -54,17 +54,20 @@ public:
 
     // constraint stuff
     void addConstraint(const Constraint &constraint);
+    void addConstraints(const std::vector<Constraint> &constraints);
     Constraint getConstraint(int i) const;
+    std::vector<Constraint> getConstraints() const;
 
     // Objective stuff
     void setObjective(const SparseVec &);
-    LinearSum getObjective() const;
+    void setObjective(const LinearSum &sum) { setObjective(sum.toSparseVec()); }
+    SparseVec getObjective() const;
     void setObjDir(ObjectiveDirection direction) { glp_set_obj_dir(lp, direction); }
     ObjectiveDirection getObjDir() const { return ObjectiveDirection(glp_get_obj_dir(lp)); }
 
     // glpk interface
-    LinearSum getMatRow(int i) const;
-    LinearSum getMatCol(int j) const;
+    SparseVec getMatRow(int i) const;
+    SparseVec getMatCol(int j) const;
     int addRows(int n) { return glp_add_rows(lp, n); }
     double getRowLb(int i) const { return glp_get_row_lb(lp, i); }
     double getRowUb(int i) const { return glp_get_row_ub(lp, i); }
