@@ -69,10 +69,14 @@ public:
     SparseVec getMatRow(int i) const;
     SparseVec getMatCol(int j) const;
     int addRows(int n) { return glp_add_rows(lp, n); }
+
     double getRowLb(int i) const { return glp_get_row_lb(lp, i); }
     double getRowUb(int i) const { return glp_get_row_ub(lp, i); }
     double getColLb(int j) const { return glp_get_col_lb(lp, j); }
     double getColUb(int j) const { return glp_get_col_ub(lp, j); }
+    void setColBnds(int j, double lowerBound, double UpperBound);
+    void setRowBnds(int i, double lowerBound, double UpperBound);
+
     SolutionStatus getStatus() const { return SolutionStatus(glp_get_status(lp)); }
     void stdBasis() { glp_std_basis(lp); }
     void advBasis() { glp_adv_basis(lp, 0); }

@@ -72,11 +72,21 @@ public:
         return lhs;
     }
 
-    LinearSum operator +(const LinearSum &rhs) && {
-        LinearSum lhs(std::move(*this));
-        lhs += rhs;
-        return lhs;
+    LinearSum operator +(LinearSum &&rhs) const & {
+        rhs += *this;
+        return std::move(rhs);
     }
+
+    LinearSum operator +(const LinearSum &rhs) && {
+        (*this) += rhs;
+        return std::move(*this);
+    }
+
+    LinearSum operator +(LinearSum &&rhs) && {
+        (*this) += rhs;
+        return std::move(*this);
+    }
+
 
     LinearSum operator+(const Monomial &rhs) const &{
         LinearSum lhs(*this);
@@ -97,9 +107,8 @@ public:
     }
 
     LinearSum operator -(const LinearSum &rhs) && {
-        LinearSum lhs(std::move(*this));
-        lhs -= rhs;
-        return lhs;
+        (*this) -= rhs;
+        return std::move(*this);
     }
 
     LinearSum operator-(const Monomial &rhs) const &{
@@ -108,10 +117,9 @@ public:
         return lhs;
     }
 
-    LinearSum operator-(const Monomial &rhs) &&{
-        LinearSum lhs(std::move(*this));
-        lhs -= rhs;
-        return lhs;
+    LinearSum operator-(const Monomial &rhs) && {
+        (*this) -= rhs;
+        return std::move(*this);
     }
 
     SparseVec toSparseVec() const {

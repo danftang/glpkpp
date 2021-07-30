@@ -7,14 +7,6 @@
 
 
 namespace glp {
-    int Constraint::glpBoundType() const {
-        return lowerBound == -std::numeric_limits<double>::infinity()?
-               (upperBound == std::numeric_limits<double>::infinity()?GLP_FR:GLP_UP):
-               (upperBound == std::numeric_limits<double>::infinity()?
-                    GLP_LO:(upperBound == lowerBound?GLP_FX:GLP_DB)
-                    );
-    }
-
 
     Constraint &Constraint::operator<=(double upperBound) {
         if(upperBound < this->upperBound) this->upperBound = upperBound;
@@ -27,8 +19,8 @@ namespace glp {
     lowerBound(lowerBound) { }
 
 
-    Constraint::Constraint(double lowerBound, const SparseVec &sum, double upperBound):
-    coefficients(sum),
+    Constraint::Constraint(double lowerBound, SparseVec sum, double upperBound):
+    coefficients(std::move(sum)),
     upperBound(upperBound),
     lowerBound(lowerBound) { }
 
@@ -39,7 +31,13 @@ namespace glp {
 
 
     std::ostream &operator <<(std::ostream &out, const Constraint &constraint) {
-        out << constraint.lowerBound << " <= " << constraint.coefficients << " <= " << constraint.upperBound;
+        out << constraint.lowerBound << " <= ";
+        bool first = true;
+        for(int term=0; term < constraint.coefficients.sparseSize(); ++term) {
+            if(first) first = false; else out << " + \t";
+            out << constraint.coefficients.values[term] << "X(" << constraint.coefficients.indices[term] << ")";
+        }
+        out << " <= " << constraint.upperBound;
         return  out;
     }
 

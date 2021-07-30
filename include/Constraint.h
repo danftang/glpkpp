@@ -15,7 +15,7 @@ public:
 
     Constraint(): Constraint(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()) {}
     Constraint(double lowerBound, double upperBound);
-    Constraint(double lowerBound, const SparseVec &coefficients, double upperBound);
+    Constraint(double lowerBound, SparseVec coefficients, double upperBound);
 //    Constraint(const LinearSum &sum): Constraint(-std::numeric_limits<double>::infinity(), sum, std::numeric_limits<double>::infinity()) {}
 
     Constraint & operator <=(double upperBound);
@@ -28,7 +28,6 @@ public:
 //    }
 //    double & operator [](int varId) { return coefficients[varId]; }
 
-    int glpBoundType() const;
 
 };
 

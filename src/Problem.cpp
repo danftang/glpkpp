@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <cfloat>
 #include "../include/glpkpp.h"
 #include "../include/Problem.h"
 
@@ -39,18 +40,16 @@ namespace glp {
             int varId = constraint.coefficients.indices[0];
             double coeff = constraint.coefficients.values[0];
             ensureNVars(varId);
-            glp_set_col_bnds(lp, varId, constraint.glpBoundType(),
-                             constraint.lowerBound/coeff,
-                             constraint.upperBound/coeff
-                             );
+            double lowerBound = std::max(constraint.lowerBound/coeff, getColLb(varId));
+            double upperBound = std::min(constraint.upperBound/coeff, getColUb(varId));
+            setColBnds(varId, lowerBound, upperBound);
         } else {
             int newRow = glp_add_rows(lp, 1);
-//            SparseVec sparseRow(nNCols(), constraint.coefficients);
             ensureNVars(constraint.coefficients.maxNonZeroIndex());
             glp_set_mat_row(lp, newRow, constraint.coefficients.sparseSize(),
                             constraint.coefficients.glpkIndexArray(),
                             constraint.coefficients.glpkValueArray());
-            glp_set_row_bnds(lp, newRow, constraint.glpBoundType(), constraint.lowerBound, constraint.upperBound);
+            setRowBnds(newRow, constraint.lowerBound, constraint.upperBound);
         }
     }
 
@@ -74,16 +73,26 @@ namespace glp {
     void Problem::ensureNVars(int n) {
         if(n > nVars()) {
             glp_add_cols(lp, n - nVars());
+            for(int j=nVars()-n+1; j<=nVars(); ++j) setColBnds(j,-DBL_MAX, DBL_MAX);
         }
     }
 
     int Problem::glpBoundsType(double lowerBound, double upperBound) {
-        return lowerBound == -std::numeric_limits<double>::infinity()?
-               (upperBound == std::numeric_limits<double>::infinity()?GLP_FR:GLP_UP):
-               (upperBound == std::numeric_limits<double>::infinity()?
+        return lowerBound <= -DBL_MAX?
+               (upperBound >= DBL_MAX?GLP_FR:GLP_UP):
+               (upperBound >= DBL_MAX?
                 GLP_LO:(upperBound == lowerBound?GLP_FX:GLP_DB)
                );
     }
+
+    void Problem::setColBnds(int j, double lowerBound, double upperBound) {
+        glp_set_col_bnds(lp, j, glpBoundsType(lowerBound, upperBound), lowerBound, upperBound);
+    }
+
+    void Problem::setRowBnds(int i, double lowerBound, double upperBound) {
+        glp_set_row_bnds(lp, i, glpBoundsType(lowerBound, upperBound), lowerBound, upperBound);
+    }
+
 
     void Problem::setObjective(const SparseVec &sum) {
         for(int j=1; j<=nVars(); ++j) {
