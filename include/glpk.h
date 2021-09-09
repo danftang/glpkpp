@@ -66,18 +66,18 @@ typedef struct glp_prob glp_prob;
 #define GLP_SF_SKIP     0x40  /* skip if problem is well scaled */
 #define GLP_SF_AUTO     0x80  /* choose scaling options automatically */
 
-/* solution indicator: */
-#define GLP_SOL            1  /* basic solution */
-#define GLP_IPT            2  /* interior-point solution */
-#define GLP_MIP            3  /* mixed integer solution */
+/* exactEndState indicator: */
+#define GLP_SOL            1  /* basic exactEndState */
+#define GLP_IPT            2  /* interior-point exactEndState */
+#define GLP_MIP            3  /* mixed integer exactEndState */
 
-/* solution status: */
-#define GLP_UNDEF          1  /* solution is undefined */
-#define GLP_FEAS           2  /* solution is feasible */
-#define GLP_INFEAS         3  /* solution is infeasible */
-#define GLP_NOFEAS         4  /* no feasible solution exists */
-#define GLP_OPT            5  /* solution is optimal */
-#define GLP_UNBND          6  /* solution is unbounded */
+/* exactEndState status: */
+#define GLP_UNDEF          1  /* exactEndState is undefined */
+#define GLP_FEAS           2  /* exactEndState is feasible */
+#define GLP_INFEAS         3  /* exactEndState is infeasible */
+#define GLP_NOFEAS         4  /* no feasible exactEndState exists */
+#define GLP_OPT            5  /* exactEndState is optimal */
+#define GLP_UNBND          6  /* exactEndState is unbounded */
 
 typedef struct
 {     /* basis factorization control parameters */
@@ -197,8 +197,8 @@ typedef struct
       int ps_tm_lim;          /* proxy time limit, milliseconds */
       int sr_heur;            /* simple rounding heuristic */
 #if 1 /* 24/X-2015; not documented--should not be used */
-      int use_sol;            /* use existing solution */
-      const char *save_sol;   /* filename to save every new solution */
+      int use_sol;            /* use existing exactEndState */
+      const char *save_sol;   /* filename to save every new exactEndState */
       int alien;              /* use alien solver */
 #endif
 #if 1 /* 16/III-2016; not documented--should not be used */
@@ -232,8 +232,8 @@ typedef struct
 
 /* reason codes: */
 #define GLP_IROWGEN     0x01  /* request for row generation */
-#define GLP_IBINGO      0x02  /* better integer solution found */
-#define GLP_IHEUR       0x03  /* request for heuristic solution */
+#define GLP_IBINGO      0x02  /* better integer exactEndState found */
+#define GLP_IHEUR       0x03  /* request for heuristic exactEndState */
 #define GLP_ICUTGEN     0x04  /* request for cut generation */
 #define GLP_IBRANCH     0x05  /* request for branching */
 #define GLP_ISELECT     0x06  /* request for subproblem selection */
@@ -254,12 +254,12 @@ typedef struct
 #define GLP_EOBJUL      0x07  /* objective upper limit reached */
 #define GLP_EITLIM      0x08  /* iteration limit exceeded */
 #define GLP_ETMLIM      0x09  /* time limit exceeded */
-#define GLP_ENOPFS      0x0A  /* no primal feasible solution */
-#define GLP_ENODFS      0x0B  /* no dual feasible solution */
+#define GLP_ENOPFS      0x0A  /* no primal feasible exactEndState */
+#define GLP_ENODFS      0x0B  /* no dual feasible exactEndState */
 #define GLP_EROOT       0x0C  /* root LP optimum not provided */
 #define GLP_ESTOP       0x0D  /* search terminated by application */
 #define GLP_EMIPGAP     0x0E  /* relative mip gap tolerance reached */
-#define GLP_ENOFEAS     0x0F  /* no primal/dual feasible solution */
+#define GLP_ENOFEAS     0x0F  /* no primal/dual feasible exactEndState */
 #define GLP_ENOCVG      0x10  /* no convergence */
 #define GLP_EINSTAB     0x11  /* numerical instability */
 #define GLP_EDATA       0x12  /* invalid data */
@@ -476,34 +476,34 @@ void glp_init_smcp(glp_smcp *parm);
 /* initialize simplex method control parameters */
 
 int glp_get_status(glp_prob *P);
-/* retrieve generic status of basic solution */
+/* retrieve generic status of basic exactEndState */
 
 int glp_get_prim_stat(glp_prob *P);
-/* retrieve status of primal basic solution */
+/* retrieve status of primal basic exactEndState */
 
 int glp_get_dual_stat(glp_prob *P);
-/* retrieve status of dual basic solution */
+/* retrieve status of dual basic exactEndState */
 
 double glp_get_obj_val(glp_prob *P);
-/* retrieve objective value (basic solution) */
+/* retrieve objective value (basic exactEndState) */
 
 int glp_get_row_stat(glp_prob *P, int i);
 /* retrieve row status */
 
 double glp_get_row_prim(glp_prob *P, int i);
-/* retrieve row primal value (basic solution) */
+/* retrieve row primal value (basic exactEndState) */
 
 double glp_get_row_dual(glp_prob *P, int i);
-/* retrieve row dual value (basic solution) */
+/* retrieve row dual value (basic exactEndState) */
 
 int glp_get_col_stat(glp_prob *P, int j);
 /* retrieve column status */
 
 double glp_get_col_prim(glp_prob *P, int j);
-/* retrieve column primal value (basic solution) */
+/* retrieve column primal value (basic exactEndState) */
 
 double glp_get_col_dual(glp_prob *P, int j);
-/* retrieve column dual value (basic solution) */
+/* retrieve column dual value (basic exactEndState) */
 
 int glp_get_unbnd_ray(glp_prob *P);
 /* determine variable causing unboundedness */
@@ -525,7 +525,7 @@ void glp_init_iptcp(glp_iptcp *parm);
 /* initialize interior-point solver control parameters */
 
 int glp_ipt_status(glp_prob *P);
-/* retrieve status of interior-point solution */
+/* retrieve status of interior-point exactEndState */
 
 double glp_ipt_obj_val(glp_prob *P);
 /* retrieve objective value (interior point) */
@@ -561,51 +561,51 @@ void glp_init_iocp(glp_iocp *parm);
 /* initialize integer optimizer control parameters */
 
 int glp_mip_status(glp_prob *P);
-/* retrieve status of MIP solution */
+/* retrieve status of MIP exactEndState */
 
 double glp_mip_obj_val(glp_prob *P);
-/* retrieve objective value (MIP solution) */
+/* retrieve objective value (MIP exactEndState) */
 
 double glp_mip_row_val(glp_prob *P, int i);
-/* retrieve row value (MIP solution) */
+/* retrieve row value (MIP exactEndState) */
 
 double glp_mip_col_val(glp_prob *P, int j);
-/* retrieve column value (MIP solution) */
+/* retrieve column value (MIP exactEndState) */
 
 void glp_check_kkt(glp_prob *P, int sol, int cond, double *ae_max,
       int *ae_ind, double *re_max, int *re_ind);
 /* check infeasibility/optimality conditions */
 
 int glp_print_sol(glp_prob *P, const char *fname);
-/* write basic solution in printable format */
+/* write basic exactEndState in printable format */
 
 int glp_read_sol(glp_prob *P, const char *fname);
-/* read basic solution from text file */
+/* read basic exactEndState from text file */
 
 int glp_write_sol(glp_prob *P, const char *fname);
-/* write basic solution to text file */
+/* write basic exactEndState to text file */
 
 int glp_print_ranges(glp_prob *P, int len, const int list[],
       int flags, const char *fname);
 /* print sensitivity analysis report */
 
 int glp_print_ipt(glp_prob *P, const char *fname);
-/* write interior-point solution in printable format */
+/* write interior-point exactEndState in printable format */
 
 int glp_read_ipt(glp_prob *P, const char *fname);
-/* read interior-point solution from text file */
+/* read interior-point exactEndState from text file */
 
 int glp_write_ipt(glp_prob *P, const char *fname);
-/* write interior-point solution to text file */
+/* write interior-point exactEndState to text file */
 
 int glp_print_mip(glp_prob *P, const char *fname);
-/* write MIP solution in printable format */
+/* write MIP exactEndState in printable format */
 
 int glp_read_mip(glp_prob *P, const char *fname);
-/* read MIP solution from text file */
+/* read MIP exactEndState from text file */
 
 int glp_write_mip(glp_prob *P, const char *fname);
-/* write MIP solution to text file */
+/* write MIP exactEndState to text file */
 
 int glp_bf_exists(glp_prob *P);
 /* check if LP basis factorization exists */
@@ -683,10 +683,10 @@ void glp_npp_build_prob(glp_prep *prep, glp_prob *Q);
 /* build resultant problem instance */
 
 void glp_npp_postprocess(glp_prep *prep, glp_prob *Q);
-/* postprocess solution to resultant problem */
+/* postprocess exactEndState to resultant problem */
 
 void glp_npp_obtain_sol(glp_prep *prep, glp_prob *P);
-/* obtain solution to original problem */
+/* obtain exactEndState to original problem */
 
 void glp_npp_free_wksp(glp_prep *prep);
 /* free the preprocessor workspace */
@@ -756,10 +756,10 @@ void glp_ios_select_node(glp_tree *T, int p);
 /* select subproblem to continue the search */
 
 int glp_ios_heur_sol(glp_tree *T, const double x[]);
-/* provide solution found by heuristic */
+/* provide exactEndState found by heuristic */
 
 void glp_ios_terminate(glp_tree *T);
-/* terminate the solution process */
+/* terminate the exactEndState process */
 
 #ifdef GLP_UNDOC
 int glp_gmi_cut(glp_prob *P, int j, int ind[], double val[], double

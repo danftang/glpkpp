@@ -27,7 +27,7 @@ typedef struct FVS FVS;
 struct FVS
 {     /* sparse vector in FVS (Full Vector Storage) format */
       int n;
-      /* vector dimension (total number of elements) */
+      /* vector nDimensions (total number of elements) */
       int nnz;
       /* number of non-zero elements, 0 <= nnz <= n */
       int *ind; /* int ind[1+n]; */

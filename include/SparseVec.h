@@ -40,7 +40,7 @@ public:
     void insert(int i, double v);
     void clear();
 //    int capacity() const { return std::min(indices.capacity(),values.capacity()); }
-//    int dimension() const { return (int)values[0]; }
+//    int nDimensions() const { return (int)values[0]; }
     void resize(size_t size) { indices.resize(size); values.resize(size); }
     void reserve(size_t n) { indices.reserve(n); values.reserve(n);}
 

@@ -27,17 +27,19 @@ public:
     std::vector<int>    kProbTokSim;    // map from variable ids of the original problem to variable ids in this simplex (0 means removed from Sim)
     std::vector<int>    kSimTokProb;    // map from variable ids in this simplex to variable ids of the original problem
     std::vector<double> pi;             // pi = c_B*B' where c_B = objective of basic vars so reduced objective = c_B*B'*N + c_N = pi*N + c_N
-    std::vector<double> lpSolution;     // solution in the original variables (excluding auxiliary vars), (non-zero zero'th element signals needs updating)
-    Problem &           originalProblem;
+    std::vector<double> lpSolution;     // exactEndState in the original variables (excluding auxiliary vars), (non-zero zero'th element signals needs updating)
+//    Problem &           originalProblem;
     double *            beta;           // current values of the basic vars
 //    std::vector<double> rCost;    // reduced cost
 
-    Simplex(Problem &prob);
+    Simplex(const Problem &prob);
     ~Simplex();
 
     int nBasic() const { return this->m; }
     int nNonBasic() const { return this->n - this->m; }
     int nVars() const { return this->n; }
+    bool isAuxiliary(int k) const { return kSimTokProb[k] <= nBasic(); } // was the k'th var auxiliary in the original problem?
+    bool isStructural(int k) const { return kSimTokProb[k] > nBasic(); } // was the k'th var structural in the original problem?
 
     std::vector<double> tableauRow(int i);
     std::vector<double> tableauCol(int j);
@@ -54,9 +56,9 @@ public:
     bool isAtUpperBound(int j) const            { return flag[j]; }
     void isAtUpperBound(int j, bool setUpper)   { flag[j] = setUpper; }
     BoundType boundType(int k);
-    void syncWithLP();
+    void syncWithLP(Problem &);
 
-    const std::vector<double> &X(); // current solution in original problem coordinates (excluding auxiliaries)
+    const std::vector<double> &X(); // current exactEndState in original problem coordinates (excluding auxiliaries)
     double nonBasicValue(int j) { return isAtUpperBound(j)?u[head[nBasic()+j]]:l[head[nBasic()+j]]; }
 
     void btran(std::vector<double> &rowVec) { if(!valid) spx_factorize(this); bfd_btran(bfd, rowVec.data()); } // in-place btran

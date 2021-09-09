@@ -42,6 +42,8 @@ public:
         moveFrom.lp = NULL;
     }
 
+    Problem(const std::vector<Constraint> &constraints, const SparseVec &objective = SparseVec());
+
     ~Problem() {
         if(lp != NULL) glp_delete_prob(lp);
     }
@@ -54,7 +56,7 @@ public:
 
     // constraint stuff
     void addConstraint(const Constraint &constraint);
-    void addConstraints(const std::vector<Constraint> &constraints);
+    void setConstraints(const std::vector<Constraint> &constraints);
     Constraint getConstraint(int i) const;
     std::vector<Constraint> getConstraints() const;
 
@@ -76,6 +78,7 @@ public:
     double getColUb(int j) const { return glp_get_col_ub(lp, j); }
     void setColBnds(int j, double lowerBound, double UpperBound);
     void setRowBnds(int i, double lowerBound, double UpperBound);
+    void eraseProb() { glp_erase_prob(lp); }
 
     SolutionStatus getStatus() const { return SolutionStatus(glp_get_status(lp)); }
     void stdBasis() { glp_std_basis(lp); }

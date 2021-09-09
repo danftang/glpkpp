@@ -19,7 +19,14 @@ public:
         X variableId;
 
         Monomial(double multiplier, const X &variableId) : multiplier(multiplier), variableId(variableId) {}
+        Monomial(const X &variableId) : Monomial(1.0,variableId) {}
 
+        friend Constraint operator==(const Monomial &linExp, double c);
+        friend Constraint operator<=(const Monomial &linExp, double c);
+        friend Constraint operator>=(const Monomial &linExp, double c);
+        friend Constraint operator==(double c, const Monomial &linExp);
+        friend Constraint operator<=(double c, const Monomial &linExp);
+        friend Constraint operator>=(double c, const Monomial &linExp);
     };
 
     LinearSum() {}
@@ -132,14 +139,13 @@ public:
         return v;
     }
 
+    friend Constraint operator==(const LinearSum &monomial, double c);
+    friend Constraint operator<=(const LinearSum &monomial, double c);
+    friend Constraint operator>=(const LinearSum &monomial, double c);
+    friend Constraint operator==(double c, const LinearSum &monomial);
+    friend Constraint operator<=(double c, const LinearSum &monomial);
+    friend Constraint operator>=(double c, const LinearSum &monomial);
 
-    Constraint operator==(double c) const;
-
-    Constraint operator<=(double c) const;
-
-    Constraint operator>=(double c) const;
-
-    friend Constraint operator<=(double c, const LinearSum &linExp);
 };
 
 

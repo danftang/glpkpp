@@ -14,7 +14,7 @@ extern "C" {
 
 namespace glp {
 
-    Simplex::Simplex(Problem &prob): originalProblem(prob) {
+    Simplex::Simplex(const Problem &prob) {
         glp_prob *P = prob.lp;
         beta = new double[prob.nConstraints()+1];
         spx_init_lp(this, P, excludeFixed);
@@ -128,7 +128,7 @@ namespace glp {
 
     // Synchronises the state of this simplex with the Problem object originally
     // passed on conctruction
-    void Simplex::syncWithLP() {
+    void Simplex::syncWithLP(Problem &originalProblem) {
         std::vector<int> daeh(n+1); // inverse of head[]
         spx_store_basis(this, originalProblem.lp, kProbTokSim.data(), daeh.data());
         std::vector<double> d(n-m+1); // reduced objective
@@ -144,7 +144,7 @@ namespace glp {
 
     void Simplex::calculateLpSolution() {
         int kProb,kSim;
-        int nConstraints = originalProblem.nConstraints();
+        int nConstraints = nBasic();
         for(int i=1; i<=m; ++i) {
             kProb = kSimTokProb[head[i]];
             if(kProb > nConstraints) {

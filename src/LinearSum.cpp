@@ -7,22 +7,60 @@
 #include "../include/glpkpp.h"
 
 namespace glp {
-    Constraint LinearSum::operator ==(double c) const {
-        return Constraint(c, toSparseVec(), c);
+
+    Constraint operator ==(const LinearSum &linExp, double c) {
+        return Constraint(c, linExp.toSparseVec(), c);
     }
 
-    Constraint LinearSum::operator<=(double c) const {
-        return Constraint(-std::numeric_limits<double>::infinity(), toSparseVec(), c);
+    Constraint operator <=(const LinearSum &linExp, double c) {
+        return Constraint(-std::numeric_limits<double>::infinity(), linExp.toSparseVec(), c);
     }
 
-    Constraint LinearSum::operator>=(double c) const {;
-        return Constraint(c, toSparseVec(), std::numeric_limits<double>::infinity());
+    Constraint operator >=(const LinearSum &linExp, double c) {;
+        return Constraint(c, linExp.toSparseVec(), std::numeric_limits<double>::infinity());
     }
 
-    Constraint operator<=(double c, const LinearSum &linExp) {
+    Constraint operator ==(double c, const LinearSum &linExp) {
+        return linExp == c;
+    }
+
+    Constraint operator <=(double c, const LinearSum &linExp) {
         return linExp >= c;
     }
 
+    Constraint operator >=(double c, const LinearSum &linExp) {
+        return linExp <= c;
+    }
+
+    Constraint operator==(const LinearSum::Monomial &monomial, double c) {
+        Constraint constraint(c,c);
+        constraint.coefficients.insert(monomial.variableId, monomial.multiplier);
+        return constraint;
+    }
+
+    Constraint operator<=(const LinearSum::Monomial &monomial, double c) {
+        Constraint constraint(-std::numeric_limits<double>::infinity(),c);
+        constraint.coefficients.insert(monomial.variableId, monomial.multiplier);
+        return constraint;
+    }
+
+    Constraint operator>=(const LinearSum::Monomial &monomial, double c) {
+        Constraint constraint(c,std::numeric_limits<double>::infinity());
+        constraint.coefficients.insert(monomial.variableId, monomial.multiplier);
+        return constraint;
+    }
+
+    Constraint operator==(double c, const LinearSum::Monomial &monomial) {
+        return monomial == c;
+    }
+
+    Constraint operator<=(double c, const LinearSum::Monomial &monomial) {
+        return monomial >= c;
+    }
+
+    Constraint operator>=(double c, const LinearSum::Monomial &monomial) {
+        return monomial <= c;
+    }
 
     std::ostream &operator <<(std::ostream &out, const LinearSum &sum) {
         bool first = true;

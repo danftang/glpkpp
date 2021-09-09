@@ -24,6 +24,15 @@ namespace glp {
     upperBound(upperBound),
     lowerBound(lowerBound) { }
 
+    bool Constraint::isValidSolution(const std::vector<double> &X) const {
+        double mx = coefficients * X;
+        return (lowerBound - Simplex::zeroTol <= mx) && (mx <= upperBound + Simplex::zeroTol);
+    }
+
+    int Constraint::highestVar() const {
+        return coefficients.maxNonZeroIndex();
+    }
+
 //    Constraint &Constraint::operator+=(std::pair<double, X> &entry) {
 //        coefficients[entry.second.id] += entry.first;
 //        return *this;

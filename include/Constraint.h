@@ -20,6 +20,9 @@ public:
 
     Constraint & operator <=(double upperBound);
 
+    bool isValidSolution(const std::vector<double> &X) const;
+
+    int highestVar() const;
 //    Constraint & operator +=(std::pair<double,X> &);
 
 //    double operator [](int varId) const {

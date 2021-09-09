@@ -11,6 +11,12 @@
 
 namespace glp {
 
+    Problem::Problem(const std::vector<Constraint> &constraints, const SparseVec &objective): Problem() {
+        setConstraints(constraints);
+        setObjective(objective);
+    }
+
+
     SparseVec Problem::getObjective() const {
         SparseVec obj;
         obj.reserve(nVars()+1);
@@ -53,7 +59,14 @@ namespace glp {
         }
     }
 
-    void Problem::addConstraints(const std::vector<Constraint> &constraints) {
+    void Problem::setConstraints(const std::vector<Constraint> &constraints) {
+        this->eraseProb();
+        int nVars = 0;
+        for(const Constraint &constraint: constraints) {
+            int nMax = constraint.highestVar();
+            if(nMax > nVars) nVars = nMax;
+        }
+        ensureNVars(nVars);
         for(const Constraint &constraint: constraints) addConstraint(constraint);
     }
 
@@ -157,6 +170,7 @@ namespace glp {
         setObjDir(originalDirection);
         setObjective(originalObjective);
     }
+
 
 
     std::ostream &operator<<(std::ostream &out, const Problem &prob) {
