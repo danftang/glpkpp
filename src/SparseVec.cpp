@@ -28,6 +28,12 @@ namespace glp {
         return max;
     }
 
+    double SparseVec::operator[](int denseIndex) const {
+        auto sparseIterator = std::find(indices.begin(), indices.end(), denseIndex);
+        if(sparseIterator != indices.end()) return values[sparseIterator - indices.begin()];
+        return 0.0;
+    }
+
 //    double &SparseVec::operator[](int i) {
 //        for (int k = 1; k <= nnz; k++) {
 //            if (ind[k] == i + 1) return vec[k];
@@ -45,7 +51,7 @@ namespace glp {
 //    }
 
     // Adds element,
-    // doesn't delete if index already exists
+    // doesn't delete if ind already exists
     void SparseVec::insert(int i, double v) {
         if (v != 0.0) {
             indices.push_back(i);

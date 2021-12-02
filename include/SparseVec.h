@@ -14,9 +14,7 @@ public:
 
     explicit SparseVec(int sparseSize): indices(sparseSize), values(sparseSize) { }
 
-    SparseVec(SparseVec &&rvalue) noexcept { // move semantics
-        swap(rvalue);
-    }
+    SparseVec(SparseVec &&rvalue) noexcept: indices(std::move(rvalue.indices)), values(std::move(rvalue.values)) { }
 
     SparseVec(const SparseVec &lvalue): indices(lvalue.indices), values(lvalue.values) { // copy semantics
     }
@@ -30,8 +28,7 @@ public:
         }
     }
 
-//    double operator [](int i) const;
-//    double &operator [](int i);
+    double operator [](int denseIndex) const;
 
     int sparseSize() const { return indices.size(); }
 
@@ -91,7 +88,8 @@ public:
 
     // move semantics
     SparseVec &operator =(SparseVec &&rvalue) {
-        swap(rvalue);
+        indices = std::move(rvalue.indices);
+        values = std::move(rvalue.values);
         return *this;
     }
 

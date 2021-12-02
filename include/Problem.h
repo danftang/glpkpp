@@ -76,8 +76,14 @@ public:
     double getRowUb(int i) const { return glp_get_row_ub(lp, i); }
     double getColLb(int j) const { return glp_get_col_lb(lp, j); }
     double getColUb(int j) const { return glp_get_col_ub(lp, j); }
+    int getRowType(int i) const { return glp_get_row_type(lp, i); }
+    int getColType(int j) const { return glp_get_col_type(lp, j); }
+    int getRowStat(int i) const { return glp_get_row_stat(lp, i); }
+    int getColStat(int j) const { return glp_get_col_stat(lp, j); }
     void setColBnds(int j, double lowerBound, double UpperBound);
     void setRowBnds(int i, double lowerBound, double UpperBound);
+    void setRowStat(int i, int state) { glp_set_row_stat(lp, i, state); }
+    void setColStat(int i, int state) { glp_set_col_stat(lp, i, state); }
     void eraseProb() { glp_erase_prob(lp); }
 
     SolutionStatus getStatus() const { return SolutionStatus(glp_get_status(lp)); }

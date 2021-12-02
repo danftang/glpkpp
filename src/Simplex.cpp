@@ -43,6 +43,21 @@ namespace glp {
         lpSolutionIsValid(false);
     }
 
+    Simplex::Simplex(Simplex &&moveFrom):
+    kProbTokSim(std::move(moveFrom.kProbTokSim)),
+    kSimTokProb(std::move(moveFrom.kSimTokProb)),
+    pi(std::move(moveFrom.pi)),
+    lpSolution(std::move(moveFrom.lpSolution))
+    {
+        static_cast<SPXLP &>(*this) = static_cast<SPXLP &>(moveFrom);
+        moveFrom.n=0;
+        moveFrom.m =0;
+        moveFrom.nnz=0;
+        spx_alloc_lp(&moveFrom);
+        beta = moveFrom.beta;
+        moveFrom.beta = new double[1];
+    }
+
 
     Simplex::~Simplex() {
         spx_free_lp(this);
@@ -70,14 +85,15 @@ namespace glp {
 
 // i,j is the pivot element, 1-based, (the j'th col of N replaces the i'th col of B)
 // pivotCol - should be set to the current ftran of the incoming column,
-// if not present this will be calculated
 // if i<1 then column j goes to its opposite bound and does not enter the basis
+// otherwise, the outgoing variable goes to the bound that moves the incoming variable
+// in the feasible direction.
 // assumes there are no fixed variables in the tableau.
     void Simplex::pivot(int i, int j, const std::vector<double> &pivotCol) {
         if(i < 1) { // column j goes to opposite bound
             pivot(i,j,pivotCol, !isAtUpperBound(j));
         } else {
-            const int upperBoundFlag = (pivotCol[i] > 0.0) ^isAtUpperBound(j); // leaving variable goes to upper bound?
+            const int upperBoundFlag = (pivotCol[i] > 0.0) ^ isAtUpperBound(j); // move incoming variable in feasible direction
             pivot(i, j, pivotCol, upperBoundFlag);
         }
     }
@@ -86,16 +102,16 @@ namespace glp {
     void Simplex::pivot(int i, int j, const std::vector<double> &pivotCol, bool leavingVarToUpperBound) {
         if(i < 1) { // column j goes to opposite bound
             if(isAtUpperBound(j) != leavingVarToUpperBound) {
-//                std::cout << "Pivoting to opposite bound" << std::endl;
-                spx_update_beta(this, beta, -1, 0, j, pivotCol.data());
+                updateBetaAndLPSolution(-1, 0, j, pivotCol);
                 isAtUpperBound(j, leavingVarToUpperBound);
             }
         } else { // basis update
+            int enteringk = head[m+j];
             assert(fabs(pivotCol[i]) > zeroTol);
             assert(u[head[i]] != l[head[i]]);       // TODO: deal with fixed variables leaving the basis
-            assert(u[head[m + j]] != l[head[m + j]]);   // fixed variables should never enter the basis
-            spx_update_beta(this, beta, i, leavingVarToUpperBound, j, pivotCol.data());
-            int err = spx_update_invb(this, i, head[j + m]);
+            assert(u[enteringk] != l[enteringk]);   // fixed variables should never enter the basis
+            updateBetaAndLPSolution(i, leavingVarToUpperBound, j, pivotCol);
+            int err = spx_update_invb(this, i, enteringk);
             spx_change_basis(this, i, leavingVarToUpperBound, j);
             if(err != 0) {
                 if (err == BFD_ELIMIT) {
@@ -110,7 +126,185 @@ namespace glp {
             }
             piIsValid(false);
         }
-        lpSolutionIsValid(false);
+    }
+
+
+    void Simplex::pivot(int i, int j, const SparseVec &spPivotCol, bool leavingVarToUpperBound) {
+        if(i < 1) { // column j goes to opposite bound
+            if(isAtUpperBound(j) != leavingVarToUpperBound) {
+                updateBetaAndLPSolution( -1, 0, j, spPivotCol);
+                isAtUpperBound(j, leavingVarToUpperBound);
+            }
+        } else { // basis update
+            int enteringk = head[m+j];
+            assert(u[head[i]] != l[head[i]]);       // TODO: deal with fixed variables leaving the basis
+            assert(u[enteringk] != l[enteringk]);   // fixed variables should never enter the basis
+            updateBetaAndLPSolution( i, leavingVarToUpperBound, j, spPivotCol);
+            int err = spx_update_invb(this, i, enteringk);
+            spx_change_basis(this, i, leavingVarToUpperBound, j);
+            if(err != 0) {
+                if (err == BFD_ELIMIT) {
+                    // need to do a refactorization
+                    int facErr = spx_factorize(this);
+                    assert(facErr == 0);
+                    spx_eval_beta(this, beta);
+                } else {
+                    std::cout << "Unhandled error while pivoting: " << err << std::endl;
+                    assert(false);
+                }
+            }
+            piIsValid(false);
+        }
+    }
+
+    // p is leaving row, q is entering col
+    void Simplex::updateBetaAndLPSolution(int p, bool p_flag, int q, const SparseVec &pivotCol) {
+        int i, k;
+        double delta_p, delta_q;
+        if (p < 0)
+        {  /* special case: xN[q] goes to its opposite bound */
+            assert(1 <= q && q <= n-m);
+            /* xN[q] should be double-bounded variable */
+            k = head[m+q]; /* x[k] = xN[q] */
+            assert(l[k] != -DBL_MAX && u[k] != +DBL_MAX && l[k] != u[k]);
+            /* determine delta xN[q] */
+            if (flag[q])
+            {  /* xN[q] goes from its upper bound to its lower bound */
+                delta_q = l[k] - u[k];
+                if(k>m) lpSolution[k-m] = l[k];
+            }
+            else
+            {  /* xN[q] goes from its lower bound to its upper bound */
+                delta_q = u[k] - l[k];
+                if(k>m) lpSolution[k-m] = u[k];
+            }
+        }
+        else
+        {  /* xB[p] leaves the basis, xN[q] enters the basis */
+            assert(1 <= p && p <= m);
+            assert(1 <= q && q <= n-m);
+            /* determine delta xB[p] */
+            k = head[p]; /* x[k] = xB[p] */
+            if (p_flag)
+            {  /* xB[p] goes to its upper bound */
+                assert(l[k] != u[k] && u[k] != +DBL_MAX);
+                delta_p = u[k] - beta[p];
+            }
+            else if (l[k] == -DBL_MAX)
+            {  /* unbounded xB[p] becomes non-basic (unusual case) */
+                assert(u[k] == +DBL_MAX);
+                delta_p = 0.0 - beta[p];
+            }
+            else
+            {  /* xB[p] goes to its lower bound or becomes fixed */
+                delta_p = l[k] - beta[p];
+            }
+            /* determine delta xN[q] */
+            delta_q = delta_p / pivotCol[p];
+            /* compute new beta[p], which is the val of xN[q] in the
+             * adjacent basis */
+            k = head[m+q]; /* x[k] = xN[q] */
+            if (flag[q])
+            {  /* xN[q] has its upper bound active */
+                assert(l[k] != u[k] && u[k] != +DBL_MAX);
+                beta[p] = u[k] + delta_q;
+            }
+            else if (l[k] == -DBL_MAX)
+            {  /* xN[q] is non-basic unbounded variable */
+                assert(u[k] == +DBL_MAX);
+                beta[p] = 0.0 + delta_q;
+            }
+            else
+            {  /* xN[q] has its lower bound active or is fixed (latter
+             * case is unusual) */
+                beta[p] = l[k] + delta_q;
+            }
+            if(k>m) lpSolution[k-m] = beta[p];
+        }
+        /* compute new beta[i] for all i != p */
+        for (int z = 0; z < pivotCol.sparseSize(); z++) {
+            i = pivotCol.indices[z];
+            if (i != p) {
+                beta[i] += pivotCol.values[i] * delta_q;
+                k = head[i];
+                if(k > m) lpSolution[k-m] = beta[i];
+            }
+        }
+    }
+
+
+    void Simplex::updateBetaAndLPSolution(int p, bool p_flag, int q, const std::vector<double> &pivotCol) {
+        assert(pivotCol.size() == m+1);
+        int i, k;
+        double delta_p, delta_q;
+        if (p < 0)
+        {  /* special case: xN[q] goes to its opposite bound */
+            assert(1 <= q && q <= n-m);
+            /* xN[q] should be double-bounded variable */
+            k = head[m+q]; /* x[k] = xN[q] */
+            assert(l[k] != -DBL_MAX && u[k] != +DBL_MAX && l[k] != u[k]);
+            /* determine delta xN[q] */
+            if (flag[q])
+            {  /* xN[q] goes from its upper bound to its lower bound */
+                delta_q = l[k] - u[k];
+                if(k>m) lpSolution[k-m] = l[k];
+            }
+            else
+            {  /* xN[q] goes from its lower bound to its upper bound */
+                delta_q = u[k] - l[k];
+                if(k>m) lpSolution[k-m] = u[k];
+            }
+        }
+        else
+        {  /* xB[p] leaves the basis, xN[q] enters the basis */
+            assert(1 <= p && p <= m);
+            assert(1 <= q && q <= n-m);
+            /* determine delta xB[p] */
+            k = head[p]; /* x[k] = xB[p] */
+            if (p_flag)
+            {  /* xB[p] goes to its upper bound */
+                assert(l[k] != u[k] && u[k] != +DBL_MAX);
+                delta_p = u[k] - beta[p];
+            }
+            else if (l[k] == -DBL_MAX)
+            {  /* unbounded xB[p] becomes non-basic (unusual case) */
+                assert(u[k] == +DBL_MAX);
+                delta_p = 0.0 - beta[p];
+            }
+            else
+            {  /* xB[p] goes to its lower bound or becomes fixed */
+                delta_p = l[k] - beta[p];
+            }
+            /* determine delta xN[q] */
+            delta_q = delta_p / pivotCol[p];
+            /* compute new beta[p], which is the val of xN[q] in the
+             * adjacent basis */
+            k = head[m+q]; /* x[k] = xN[q] */
+            if (flag[q])
+            {  /* xN[q] has its upper bound active */
+                assert(l[k] != u[k] && u[k] != +DBL_MAX);
+                beta[p] = u[k] + delta_q;
+            }
+            else if (l[k] == -DBL_MAX)
+            {  /* xN[q] is non-basic unbounded variable */
+                assert(u[k] == +DBL_MAX);
+                beta[p] = 0.0 + delta_q;
+            }
+            else
+            {  /* xN[q] has its lower bound active or is fixed (latter
+             * case is unusual) */
+                beta[p] = l[k] + delta_q;
+            }
+            if(k>m) lpSolution[k-m] = beta[p];
+        }
+        /* compute new beta[i] for all i != p */
+        for (i = 1; i <= m; i++) {
+            if (i != p) {
+                beta[i] += pivotCol[i] * delta_q;
+                k = head[i];
+                if (k > m) lpSolution[k - m] = beta[i];
+            }
+        }
     }
 
 
