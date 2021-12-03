@@ -12,16 +12,21 @@
 #include <functional>
 #include <limits>
 #include <vector>
+#include <cmath>
 #include <algorithm>
+#include <cassert>
+#include <float.h>
 
 #include "glpk.h"
 extern "C" {
     #include "spxlp.h"
+    #include "fvs.h"
 };
 
 
 namespace glp {
     #include "SparseVec.h"
+    #include "FVSVector.h"
     #include "X.h"
     #include "LinearSum.h"
     #include "Constraint.h"

@@ -5,52 +5,47 @@
 #ifndef GLPKPP_FVSVECTOR_H
 #define GLPKPP_FVSVECTOR_H
 
-#include <cmath>
-#include "glpkpp.h"
 
-class FVSVector: public FVS {
+class FVSVector {
+public:
     static constexpr double tol = 1e-8;
+    std::vector<int>    indices;    // indices of non-zero values
+    std::vector<double> vec;        // dense vector of values
 
-    explicit FVSVector(int size) {
-        n = size;
-        nnz = 0;
-        ind = new int(size+1);
-        vec = new double(size+1);
-        for(int i=0; i<=n; ++i) vec[i] = 0.0;
+    FVSVector(FVSVector &&other): indices(std::move(other.indices)), vec(std::move(other.vec)) { }
+
+    explicit FVSVector(int maxIndex): vec(maxIndex+1,0.0) { };
+
+
+    explicit FVSVector(std::vector<double> &&dense): vec(std::move(dense)) {
+        recalculateIndices();
     };
-
-
-    explicit FVSVector(const std::vector<double> &dense) {
-        ind = new int(dense.size());
-        vec = new double(dense.size());
-        nnz = 0;
-        n = dense.size()-1;
-        for(int i=1; i <= n; ++i) {
-            double v = dense[i];
-            vec[i] = v;
-            if(v != 0.0) ind[++nnz] = i;
-        }
-    };
-
-
-    ~FVSVector() {
-        delete ind;
-        delete vec;
-    }
 
 
     void clear() {
-        for(int z=1; z<=nnz; ++z) {
-            vec[ind[z]] = 0.0;
-        }
-        nnz = 0;
+        for(int i: indices) vec[i] = 0.0;
+        indices.clear();
     }
 
+    int sparseSize() const { return indices.size(); }
 
-    void recalculateNonZeroIndices() {
-        nnz = 0;
-        for(int i=0; i<n; ++i) {
-            if(fabs(vec[i]) > tol) ind[nnz++] = i;
+    double operator [](int i) const {
+        return vec[i];
+    }
+
+    operator FVS() {
+        FVS fvs;
+        fvs.n = vec.size()-1;
+        fvs.nnz = indices.size();
+        fvs.ind = indices.data()-1;
+        fvs.vec = vec.data();
+        return fvs;
+    }
+
+    void recalculateIndices() {
+        indices.resize(0);
+        for(int i=0; i<vec.size(); ++i) {
+            if(std::fabs(vec[i]) > tol) indices.push_back(i);
         }
     }
 
