@@ -25,6 +25,7 @@ namespace glp {
         spx_eval_beta(this, beta);
         assert(m == prob.nConstraints()); // TODO: weaken this constraint (needed for conversion back to original space)
         pi[0] = 0.0;    // indicates not yet evaluated
+        lpSolution[0] = 0.0;
         for(int kProb=1; kProb <= prob.nVars() + prob.nConstraints(); ++kProb) {
             int kSim = kProbTokSim[kProb];
             if(kSim > 0) {
@@ -37,7 +38,7 @@ namespace glp {
                 assert(false); // don't support shifted bounds as yet (loss of information on shift).
             }
         }
-        lpSolutionIsValid(false);
+        calculateLpSolution();
     }
 
     Simplex::Simplex(Simplex &&moveFrom):
@@ -242,7 +243,6 @@ namespace glp {
                 }
             }
         }
-        lpSolutionIsValid(true);
     }
 
     std::vector<double> Simplex::reducedCost() {
