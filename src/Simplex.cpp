@@ -157,38 +157,38 @@ namespace glp {
     // p is leaving row, q is entering col
     void Simplex::updateBetaAndLPSolution(int p, double delta_q, const SparseVec &pivotCol) {
         /* compute new beta[i] for all i != p */
-        int i, k;
+        int i, kProb;
         for (int z = 0; z < pivotCol.sparseSize(); z++) {
             i = pivotCol.indices[z];
             if (i != p) {
                 beta[i] += pivotCol.values[z] * delta_q;
-                k = head[i];
-                if(k > m) lpSolution[k-m] = beta[i];
+                kProb = kSimTokProb[head[i]];
+                if(kProb > m) lpSolution[kProb-m] = beta[i];
             }
         }
     }
 
     void Simplex::updateBetaAndLPSolution(int p, double delta_q, const std::vector<double> &pivotCol) {
         /* compute new beta[i] for all i != p */
-        int i, k;
+        int i, kProb;
         for (i = 1; i <= m; i++) {
             if (i != p) {
                 beta[i] += pivotCol[i] * delta_q;
-                k = head[i];
-                if (k > m) lpSolution[k - m] = beta[i];
+                kProb = kSimTokProb[head[i]];
+                if (kProb > m) lpSolution[kProb - m] = beta[i];
             }
         }
     }
 
     void Simplex::updateBetaAndLPSolution(int p, double delta_q, const FVSVector &pivotCol) {
         /* compute new beta[i] for all i != p */
-        int i, k;
+        int i, kProb;
         for (int z = 0; z < pivotCol.sparseSize(); z++) {
             i = pivotCol.indices[z];
             if (i != p) {
                 beta[i] += pivotCol.vec[i] * delta_q;
-                k = head[i];
-                if(k > m) lpSolution[k-m] = beta[i];
+                kProb = kSimTokProb[head[i]];
+                if(kProb > m) lpSolution[kProb-m] = beta[i];
             }
         }
     }

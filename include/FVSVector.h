@@ -12,6 +12,8 @@ public:
     std::vector<int>    indices;    // indices of non-zero values
     std::vector<double> vec;        // dense vector of values
 
+    FVSVector() = default;
+
     FVSVector(FVSVector &&other): indices(std::move(other.indices)), vec(std::move(other.vec)) { }
 
     explicit FVSVector(int maxIndex): vec(maxIndex+1,0.0) { };
@@ -31,6 +33,12 @@ public:
 
     double operator [](int i) const {
         return vec[i];
+    }
+
+    FVSVector &operator =(std::vector<double> &&dense) {
+        vec = std::move(dense);
+        recalculateIndices();
+        return *this;
     }
 
     operator FVS() {

@@ -105,12 +105,14 @@ void Simplex::updateBetaAndLPSolution(int p, bool p_flag, int q, const COLUMN &p
         if (flag[q])
         {  /* xN[q] goes from its upper bound to its lower bound */
             delta_q = l[k] - u[k];
-            if(k>m) lpSolution[k-m] = l[k];
+            int kProb = kSimTokProb[k];
+            if(kProb>m) lpSolution[kProb-m] = l[k];
         }
         else
         {  /* xN[q] goes from its lower bound to its upper bound */
             delta_q = u[k] - l[k];
-            if(k>m) lpSolution[k-m] = u[k];
+            int kProb = kSimTokProb[k];
+            if(kProb>m) lpSolution[kProb-m] = u[k];
         }
     }
     else
@@ -123,18 +125,21 @@ void Simplex::updateBetaAndLPSolution(int p, bool p_flag, int q, const COLUMN &p
         {  /* xB[p] goes to its upper bound */
             assert(l[k] != u[k] && u[k] != +DBL_MAX);
             delta_p = u[k] - beta[p];
-            if(k>m) lpSolution[k-m] = u[k];
+            int kProb = kSimTokProb[k];
+            if(kProb>m) lpSolution[kProb-m] = u[k];
         }
         else if (l[k] == -DBL_MAX)
         {  /* unbounded xB[p] becomes non-basic (unusual case) */
             assert(u[k] == +DBL_MAX);
             delta_p = 0.0 - beta[p];
-            if(k>m) lpSolution[k-m] = 0.0;
+            int kProb = kSimTokProb[k];
+            if(kProb>m) lpSolution[kProb-m] = 0.0;
         }
         else
         {  /* xB[p] goes to its lower bound or becomes fixed */
             delta_p = l[k] - beta[p];
-            if(k>m) lpSolution[k-m] = l[k];
+            int kProb = kSimTokProb[k];
+            if(kProb>m) lpSolution[kProb-m] = l[k];
         }
         /* determine delta xN[q] */
         delta_q = delta_p / pivotCol[p];
@@ -156,7 +161,8 @@ void Simplex::updateBetaAndLPSolution(int p, bool p_flag, int q, const COLUMN &p
              * case is unusual) */
             beta[p] = l[k] + delta_q;
         }
-        if(k>m) lpSolution[k-m] = beta[p];
+        int kProb = kSimTokProb[k];
+        if(kProb>m) lpSolution[kProb-m] = beta[p];
     }
     /* compute new beta[i] for all i != p */
     updateBetaAndLPSolution(p, delta_q, pivotCol);
@@ -185,8 +191,8 @@ void Simplex::pivot(int i, int j, const COLUMN &pivotCol, bool leavingVarToUpper
                 assert(facErr == 0);
                 spx_eval_beta(this, beta);
                 for(int i=1; i<=nBasic(); ++i) {
-                    int k = head[i];
-                    if(k>m) lpSolution[k-m] = beta[i];
+                    int kProb = kSimTokProb[head[i]];
+                    if(kProb>m) lpSolution[kProb-m] = beta[i];
                 }
             } else {
                 std::cout << "Unhandled error while pivoting: " << err << std::endl;
