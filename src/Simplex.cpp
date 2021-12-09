@@ -26,6 +26,7 @@ namespace glp {
         assert(m == prob.nConstraints()); // TODO: weaken this constraint (needed for conversion back to original space)
         pi[0] = 0.0;    // indicates not yet evaluated
         lpSolution[0] = 0.0;
+        // calculate kSimTokProb lookup table
         for(int kProb=1; kProb <= prob.nVars() + prob.nConstraints(); ++kProb) {
             int kSim = kProbTokSim[kProb];
             if(kSim > 0) {
@@ -38,6 +39,7 @@ namespace glp {
                 assert(false); // don't support shifted bounds as yet (loss of information on shift).
             }
         }
+
         calculateLpSolution();
     }
 
@@ -259,15 +261,15 @@ namespace glp {
         piIsValid(true);
     }
 
-
-    void Simplex::setObjective(const SparseVec &objective) {
-        for(int k=0; k <= nVars(); ++k) {
-            c[k] = 0.0;
-        }
-        for(int l=0; l<objective.sparseSize(); ++l) {
-            c[objective.indices[l]] = objective.values[l];
-        }
-    }
+// should set the objective when creating the problem
+//    void Simplex::setObjective(const SparseVec &objectiveByKsim) {
+//        for(int k=0; k <= nVars(); ++k) {
+//            c[k] = 0.0;
+//        }
+//        for(int l=0; l<objectiveByKsim.sparseSize(); ++l) {
+//            c[objectiveByKsim.indices[l]] = objectiveByKsim.values[l];
+//        }
+//    }
 
     std::vector<double> Simplex::piTimesMinusN(const std::vector<double> &pi) {
         std::vector<double> d(nNonBasic()+1, 0.0); // = pi*N

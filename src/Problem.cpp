@@ -116,6 +116,16 @@ namespace glp {
         }
     }
 
+    void Problem::setObjective(const std::vector<double> &obj) {
+        int j=0;
+        while(++j < obj.size()) {
+            glp_set_obj_coef(lp, j, obj[j]);
+        }
+        while(j <= nVars()) {
+            glp_set_obj_coef(lp, j++, 0.0);
+        }
+    }
+
 
     std::vector<double> Problem::primalSolution() const {
         std::vector<double> solution(nVars()+1);

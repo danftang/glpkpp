@@ -62,6 +62,7 @@ public:
 
     // Objective stuff
     void setObjective(const SparseVec &);
+    void setObjective(const std::vector<double> &);
     void setObjective(const LinearSum &sum) { setObjective(sum.toSparseVec()); }
     SparseVec getObjective() const;
     void setObjDir(ObjectiveDirection direction) { glp_set_obj_dir(lp, direction); }
