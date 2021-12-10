@@ -12,8 +12,6 @@
 // k - variable (column) identifier (1..n)
 class Simplex: public SPXLP {
 public:
-    static constexpr int excludeFixed = 1;  // exclude non-basic fixed variables
-    static constexpr int shift = 0;         // don't shift bounds to zero. Don't change this!
     static constexpr double zeroTol = 1e-7; // absolute val under which a variable is considered to be zero
 
     enum BoundType {
@@ -24,6 +22,8 @@ public:
     };
 
 
+    const int excludeFixed;  // exclude non-basic fixed variables
+    const int shiftLBToZero;         // don't shift lower bounds to zero.
     std::vector<int>    kProbTokSim;    // map from variable ids of the original problem to variable ids in this simplex (0 means removed from Sim)
     std::vector<int>    kSimTokProb;    // map from variable ids in this simplex to variable ids of the original problem
     std::vector<double> pi;             // pi = c_B*B' where c_B = objective of basic vars so reduced objective = c_B*B'*N + c_N = pi*N + c_N
@@ -32,7 +32,7 @@ public:
     double *            beta;           // current values of the basic vars
 //    std::vector<double> rCost;    // reduced cost
 
-    Simplex(const Problem &prob);
+    Simplex(const Problem &prob, bool excludeNonBasicFixedVariables = true, bool shiftLowerBoundToZero = false);
     Simplex(const Simplex &other) = delete; // copying is usually accidental when passing, so better to disable it.
     Simplex(Simplex &&moveFrom);
     ~Simplex();

@@ -11,7 +11,10 @@ extern "C" {
 
 namespace glp {
 
-    Simplex::Simplex(const Problem &prob) {
+    Simplex::Simplex(const Problem &prob, bool excludeNonBasicFixedVariables, bool shiftLowerBoundToZero) :
+    excludeFixed(excludeNonBasicFixedVariables),
+    shiftLBToZero(shiftLowerBoundToZero)
+    {
         glp_prob *P = prob.lp;
         beta = new double[prob.nConstraints()+1];
         spx_init_lp(this, P, excludeFixed);
@@ -20,7 +23,7 @@ namespace glp {
         kProbTokSim.resize(prob.nVars() + prob.nConstraints() + 1);
         kSimTokProb.resize(n+1);
         lpSolution.resize(prob.nVars()+1);
-        spx_build_lp(this, P, excludeFixed, shift, kProbTokSim.data());
+        spx_build_lp(this, P, excludeFixed, shiftLBToZero, kProbTokSim.data());
         spx_build_basis(this, P, kProbTokSim.data());
         spx_eval_beta(this, beta);
         assert(m == prob.nConstraints()); // TODO: weaken this constraint (needed for conversion back to original space)
@@ -44,6 +47,8 @@ namespace glp {
     }
 
     Simplex::Simplex(Simplex &&moveFrom):
+    excludeFixed(moveFrom.excludeFixed),
+    shiftLBToZero(moveFrom.shiftLBToZero),
     kProbTokSim(std::move(moveFrom.kProbTokSim)),
     kSimTokProb(std::move(moveFrom.kSimTokProb)),
     pi(std::move(moveFrom.pi)),
@@ -216,7 +221,7 @@ namespace glp {
         spx_store_basis(this, originalProblem.lp, kProbTokSim.data(), daeh.data());
         std::vector<double> d(n-m+1); // reduced objective
         for(int j=1; j<=n-m; ++j) { d[j] = reducedCost(j); }
-        spx_store_sol(this, originalProblem.lp, shift, kProbTokSim.data(), daeh.data(), beta, pi.data(), d.data());
+        spx_store_sol(this, originalProblem.lp, shiftLBToZero, kProbTokSim.data(), daeh.data(), beta, pi.data(), d.data());
     }
 
     const std::vector<double> &Simplex::X() {
